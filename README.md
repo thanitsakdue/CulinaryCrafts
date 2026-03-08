@@ -97,6 +97,24 @@ CulinaryCrafts/
 
 ## 📋 Getting Started
 
+### 🚀 **Quick Start (Choose One)**
+
+**🐳 Docker (Recommended - Everything in one command):**
+```batch
+.\scripts\docker-start.bat
+```
+> Starts frontend, backend, database, Redis, monitoring - everything! 
+> Visit http://localhost:3000 when ready.
+
+**💻 Local Development (Your current working setup):**
+```batch
+.\scripts\ultra-start.bat
+```
+
+**📖 Complete Guide:** See [GITHUB-DOCKER-GUIDE.md](GITHUB-DOCKER-GUIDE.md) for GitHub setup & Docker instructions.
+
+---
+
 ### Prerequisites
 - Node.js 18+ and Python 3.11+
 - Google Cloud Project with enabled APIs
