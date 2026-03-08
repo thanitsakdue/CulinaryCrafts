@@ -1,0 +1,61 @@
+# =================================
+# 🤖 AI & ML LIBRARIES (Advanced)
+# =================================
+# LangChain & LangGraph for Agentic AI  
+langchain==0.1.0
+langgraph==0.0.40
+langsmith==0.0.69
+
+# Google AI & Vertex AI
+google-cloud-aiplatform==1.71.0
+google-generativeai==0.4.0
+vertexai==1.71.1
+
+# Google Cloud Services
+google-cloud-firestore==2.13.1
+google-cloud-storage==2.10.0
+google-cloud-secret-manager==2.17.0
+
+# Vector operations & embeddings
+numpy==1.25.2
+scipy==1.11.4
+
+# =================================
+# 📱 LINE INTEGRATION
+# =================================
+line-bot-sdk==3.5.0
+
+# =================================
+# 🗄️ ADVANCED DATABASE & CACHE
+# =================================
+redis==5.0.1
+alembic==1.13.0
+
+# =================================
+# 📊 ADVANCED MONITORING
+# =================================
+prometheus-client==0.19.0
+google-cloud-monitoring==2.16.0
+google-cloud-logging==3.8.0
+
+# =================================
+# 🔧 ADVANCED UTILITIES
+# =================================
+# Image processing (for multimodal input)
+Pillow==10.1.0
+# opencv-python==4.8.1.78  # Comment out if causes issues
+
+# Data processing
+marshmallow==3.20.2
+jsonschema==4.20.0
+
+# Date/time handling
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Task queue & background jobs
+celery==5.3.4
+
+# Performance monitoring
+psutil==5.9.6
+aiofiles==23.2.1

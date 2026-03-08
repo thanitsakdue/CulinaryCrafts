@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # =================================
+  # 🐍 BACKEND API
+  # =================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: culinary-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - default
+
+  # =================================
+  # ⚛️ FRONTEND WEB APP
+  # =================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: culinary-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${API_URL}
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - default
+
+  # =================================
+  # 🔴 REDIS CACHE
+  # =================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: culinary-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "auth", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # =================================
+  # 🗄️ POSTGRESQL
+  # =================================
+  postgres:
+    image: postgres:15.2-alpine
+    container_name: culinary-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+# =================================
+# 💾 PERSISTENT VOLUMES
+# =================================
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+# =================================
+# 🌐 NETWORKS
+# =================================
+networks:
+  default:
+    name: culinary-crafts
+    driver: bridge
