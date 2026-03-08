@@ -99,17 +99,33 @@ CulinaryCrafts/
 
 ### 🚀 **Quick Start (Choose One)**
 
+**🎯 Interactive Menu:**
+```batch
+.\scripts\menu.bat
+```
+> 📋 **NEW**: Interactive menu for all 21+ scripts!
+
 **🐳 Docker (Recommended - Everything in one command):**
 ```batch
 .\scripts\docker-start.bat
 ```
 > Starts frontend, backend, database, Redis, monitoring - everything! 
 > Visit http://localhost:3000 when ready.
+> 
+> ❌ **Build issues?** Try: `.\scripts\docker-fix.bat`
 
 **💻 Local Development (Your current working setup):**
 ```batch
 .\scripts\ultra-start.bat
 ```
+
+**🧪 Test Enhanced API Docs:**
+```batch
+.\scripts\test-api-docs.bat  # Opens http://localhost:8000/docs
+```
+> ✨ **NEW**: Comprehensive Swagger documentation with examples!
+
+**📚 Complete Scripts Guide:** See [SCRIPTS-GUIDE.md](SCRIPTS-GUIDE.md) for all 21+ scripts
 
 **📖 Complete Guide:** See [GITHUB-DOCKER-GUIDE.md](GITHUB-DOCKER-GUIDE.md) for GitHub setup & Docker instructions.
 

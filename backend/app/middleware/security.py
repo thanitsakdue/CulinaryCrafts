@@ -29,7 +29,23 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             response.headers["X-XSS-Protection"] = "1; mode=block"
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
             response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-            response.headers["Content-Security-Policy"] = "default-src 'self'"
+            
+            # CSP policy that allows Swagger UI while maintaining security
+            csp_policy = (
+                "default-src 'self' "
+                "data: blob:; "
+                "script-src 'self' 'unsafe-inline' "
+                "https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' "
+                "https://cdn.jsdelivr.net; "
+                "img-src 'self' data: "
+                "https://fastapi.tiangolo.com "
+                "https://cdn.jsdelivr.net; "
+                "font-src 'self' "
+                "https://cdn.jsdelivr.net; "
+                "connect-src 'self'"
+            )
+            response.headers["Content-Security-Policy"] = csp_policy
             
             # Add custom headers
             response.headers["X-API-Version"] = "1.0.0"

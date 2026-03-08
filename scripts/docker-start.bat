@@ -7,11 +7,26 @@ echo 🍳 Starting Culinary Crafts with Docker (Development)
 echo.
 
 echo 📦 Building and starting all services...
+echo This may take a few minutes on first run...
+echo.
 docker-compose -f docker-compose.dev.yml up --build -d
+
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo ❌ Docker build failed!
+    echo.
+    echo 🔧 Quick fixes to try:
+    echo    1. Run: .\scripts\docker-fix.bat (automatic fix)
+    echo    2. Or:  .\scripts\ultra-start.bat (local development)
+    echo    3. Check: docker-compose -f docker-compose.dev.yml logs
+    echo.
+    pause
+    exit /b 1
+)
 
 echo.
 echo ⏳ Waiting for services to be ready...
-timeout /t 10 /nobreak >nul
+timeout /t 15 /nobreak >nul
 
 echo.
 echo 🎉 Services are starting up!
