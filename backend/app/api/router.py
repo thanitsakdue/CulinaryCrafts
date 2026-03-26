@@ -2,12 +2,15 @@
 🌐 Culinary Crafts - API Router
 Main API routing configuration with comprehensive documentation
 """
-
+from app.services.recipe_engine import recipe_engine
 from fastapi import APIRouter, HTTPException, Depends, status, Query
 from fastapi.responses import PlainTextResponse
 from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
 
 # Import Pydantic models
 try:
@@ -38,14 +41,17 @@ except ImportError:
     
     class ChatResponse(BaseModel):
         message: str
-        input: Dict[str, Any]
+        input: dict
         response: str
+        conversation_id: str
+        suggestions: Optional[List[str]] = []
+        state: Optional[Dict[str, Any]] = {}
 
 logger = logging.getLogger(__name__)
 
 # Create main API router with metadata
 router = APIRouter(
-    prefix="/api/v1",
+    prefix="",
     tags=["Culinary Crafts API"],
     responses={
         400: {"model": ErrorResponse, "description": "Bad Request"},
@@ -62,6 +68,11 @@ router = APIRouter(
 # =================================
 # 🏠 CORE ENDPOINTS
 # =================================
+load_dotenv()
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("❌ ไม่พบ GEMINI_API_KEY ในไฟล์ .env")
+genai.configure(api_key=api_key)
 
 @router.get(
     "/",
@@ -133,7 +144,23 @@ async def api_health() -> HealthResponse:
 # =================================
 # 🤖 AI ASSISTANT ENDPOINTS
 # =================================
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
+def get_available_model():
+    try:
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                logger.info(f"✅ Found working model: {m.name}")
+                if 'gemini-1.5-flash' in m.name:
+                    return m.name
+        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        return models[0] if models else "gemini-pro"
+    except Exception as e:
+        logger.error(f"❌ Error listing models: {e}")
+        return "gemini-1.5-flash"
 
+working_model_name = get_available_model()
+logger.info(f"🚀 Using model: {working_model_name}")
+model = genai.GenerativeModel(working_model_name)
 @router.post(
     "/chat",
     response_model=ChatResponse,
@@ -158,35 +185,59 @@ async def api_health() -> HealthResponse:
         }
     }
 )
-async def chat_with_assistant(request: ChatRequest) -> ChatResponse:
-    """
-    **Chat with AI Cooking Assistant** 🤖
+
+@router.post("/chat", response_model=ChatResponse)
+async def chat_with_assistant(request: ChatRequest):
+    user_query = request.message
     
-    Engage in intelligent conversations with our AI cooking assistant powered by:
-    - **LangGraph State Machine**: Multi-turn conversation management
-    - **Gemini 1.5 Pro**: Advanced multimodal AI processing
-    - **Context Awareness**: Remembers user preferences and conversation history
-    
-    **Features:**
-    - Recipe recommendations based on available ingredients
-    - Step-by-step cooking guidance
-    - Ingredient substitution suggestions
-    - Dietary restriction compliance
-    - Skill-level appropriate instructions
-    
-    **Example Conversations:**
-    - "What can I make with chicken, rice, and vegetables?"
-    - "How do I make pasta for someone who's gluten-free?"
-    - "I'm a beginner, can you teach me to make stir-fry?"
-    - "What's a healthy dinner for two people in 30 minutes?"
-    """
-    # TODO: Implement LangGraph State Machine integration
-    return ChatResponse(
-        conversation_id=f"conv_{request.user_id or 'anonymous'}_{datetime.utcnow().timestamp()}",
-        response="🤖 AI Assistant integration coming soon! This will use LangGraph state machine for intelligent cooking conversations.",
-        suggestions=["Browse recipes", "Update preferences", "View saved recipes"],
-        state={"current_step": "greeting", "integration_status": "coming_soon"}
-    )
+    try:
+        extract_prompt = f"จากประโยค: '{user_query}' ช่วยสกัดชื่อวัตถุดิบหรือชื่ออาหารออกมาเป็นคำสั้นๆ แค่คำเดียวหรือสองคำ เช่น 'ไก่', 'หมู', 'ไข่ดาว' (ตอบแค่คำนั้นไม่ต้องมีคำบรรยาย)"
+        extracted_keywords = model.generate_content(extract_prompt).text.strip()
+        
+        found_recipes = recipe_engine.search(extracted_keywords, limit=3)
+        
+        if not found_recipes:
+            return ChatResponse(
+                response=f"ขออภัยครับ เชฟหาเมนูที่เกี่ยวกับ '{extracted_keywords}' ใน Cookbook ไม่เจอเลย ลองเปลี่ยนวัตถุดิบดูไหมครับ?",
+                input={"message": user_query},
+                conversation_id="none",
+                message="Not Found"
+            )
+
+        context = "\n---\n".join([f"เมนู: {r['name']}\nรายละเอียด: {r['ingredients']}" for r in found_recipes])
+        prompt = f"""
+        คุณคือ AI Chef ผู้เชี่ยวชาญด้านอาหารไทย 
+        หน้าที่ของคุณคือตอบคำถามผู้ใช้โดยใช้ "ข้อมูลสูตรอาหาร" ที่กำหนดให้ด้านล่างนี้เท่านั้น 
+        **ห้ามเมคข้อมูลเอง ห้ามเอาความรู้จากภายนอกมาตอบ**
+        
+        ข้อมูลสูตรอาหารจาก Cookbook:
+        {context}
+        
+        คำถามจากผู้ใช้: "{user_query}"
+        
+        คำแนะนำ: ตอบให้ดูเป็นกันเอง สุภาพ และจัดรูปแบบให้อ่านง่าย
+        """
+
+        response = model.generate_content(prompt)
+        ai_response = response.text
+
+        return ChatResponse(
+            message="Success",
+            response=ai_response,
+            input={"message": user_query},
+            conversation_id="test",
+            suggestions=[r['name'] for r in found_recipes] # ส่งชื่อเมนูที่เจอไปเป็นปุ่มกด
+        )
+
+    except Exception as e:
+        logger.error(f"Error: {str(e)}")
+        return ChatResponse(
+            message="Error",
+            response=f"ขออภัยครับ เชฟเกิดข้อผิดพลาด: {str(e)}",
+            input={"message": user_query},
+            conversation_id="error",
+            suggestions=[]
+        )
 
 # =================================
 # 🔍 RECIPE SEARCH & RETRIEVAL
@@ -259,19 +310,13 @@ async def search_recipes(
     - Maximum cooking time
     - Available ingredients
     """
-    # TODO: Implement Vertex AI Search integration
+    
     return RecipeSearchResponse(
         query=query or "all recipes",
         results=[],
         total_results=0,
-        page=page,
-        per_page=per_page,
-        filters_applied={
-            "dietary": dietary,
-            "difficulty": difficulty,
-            "cuisine": cuisine,
-            "max_cooking_time": max_cooking_time
-        }
+        page=1,
+        per_page=10
     )
 
 @router.get(

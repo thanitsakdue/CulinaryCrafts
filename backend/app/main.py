@@ -2,7 +2,7 @@
 🍳 Culinary Crafts - FastAPI Main Application
 AI Cooking Assistant with Agentic Workflow
 """
-
+from app.services.recipe_engine import recipe_engine
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -48,32 +48,27 @@ except ImportError as e:
     def get_settings():
         return MockSettings()
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Get application settings
 settings = get_settings()
 
-# Application lifespan events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Handle application startup and shutdown events."""
-    
-    # Startup events
+
     logger.info("🍳 Starting Culinary Crafts API...")
-    logger.info(f"Environment: {settings.ENVIRONMENT}")
-    logger.info(f"Debug mode: {settings.DEBUG}")
     
-    # Initialize services here (Firestore, Redis, etc.)
     try:
-        # TODO: Initialize database connections
-        # TODO: Initialize AI services (Gemini, Vertex AI)
-        # TODO: Initialize memory services (Firestore)
-        logger.info("✅ All services initialized successfully")
+        logger.info("📦 Initializing Recipe Engine (Loading Thai Food Dataset)...")
+        recipe_engine.initialize()
+        
+        app.state.recipe_engine = recipe_engine 
+        
+        logger.info("✅ All services (including Recipe Engine) initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize services: {e}")
         raise
@@ -249,9 +244,9 @@ security = HTTPBearer(auto_error=False)
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -263,10 +258,10 @@ if settings.ALLOWED_HOSTS:
     )
 
 # Custom security middleware
-app.add_middleware(SecurityMiddleware)
+#app.add_middleware(SecurityMiddleware)
 
 # Rate limiting middleware  
-app.add_middleware(RateLimitMiddleware)
+#app.add_middleware(RateLimitMiddleware)
 
 # Include routers
 app.include_router(api_router, prefix=f"/api/{settings.API_VERSION}")

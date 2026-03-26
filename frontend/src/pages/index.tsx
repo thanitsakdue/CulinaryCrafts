@@ -102,9 +102,9 @@ const Home: NextPage = () => {
           </form>
 
           {response && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-md">
+            <div className="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">
               <h3 className="font-semibold text-gray-900 mb-2">🤖 AI Chef Response:</h3>
-              <p className="text-gray-700">{response}</p>
+              <p className="text-gray-700 whitespace-pre-line">{response}</p>
             </div>
           )}
         </div>
