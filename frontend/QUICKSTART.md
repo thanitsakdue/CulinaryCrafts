@@ -11,6 +11,7 @@ cp .env.example .env.local
 ```
 
 Edit `.env.local`:
+
 ```env
 NEXTAUTH_SECRET=my-secret-key-minimum-32-chars
 NEXTAUTH_URL=http://localhost:3000
@@ -39,12 +40,14 @@ Visit **http://localhost:3000** 🚀
 ## What Changed?
 
 ### ❌ Before (LINE Login)
+
 - Thai language only
 - Dark cyberpunk theme
 - No image support
 - LINE ID-based authentication
 
 ### ✅ After (Google OAuth)
+
 - Warm culinary theme (cream + terracotta)
 - Image upload + camera support
 - Multimodal AI (text + image to Gemini)
@@ -56,33 +59,35 @@ Visit **http://localhost:3000** 🚀
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/pages/index.tsx` | Home page (auth redirect) |
-| `src/pages/chat.tsx` | Main chat interface |
-| `src/pages/api/auth/[...nextauth].ts` | OAuth configuration |
-| `src/components/ChatInterface.tsx` | Chat UI component |
-| `src/components/ImageAttachment.tsx` | Image upload component |
-| `src/services/apiClient.ts` | API integration |
-| `tailwind.config.js` | Design system colors |
-| `src/styles/globals.css` | Tailwind + custom styles |
+| File                                  | Purpose                   |
+| ------------------------------------- | ------------------------- |
+| `src/pages/index.tsx`                 | Home page (auth redirect) |
+| `src/pages/chat.tsx`                  | Main chat interface       |
+| `src/pages/api/auth/[...nextauth].ts` | OAuth configuration       |
+| `src/components/ChatInterface.tsx`    | Chat UI component         |
+| `src/components/ImageAttachment.tsx`  | Image upload component    |
+| `src/services/apiClient.ts`           | API integration           |
+| `tailwind.config.js`                  | Design system colors      |
+| `src/styles/globals.css`              | Tailwind + custom styles  |
 
 ---
 
 ## Feature Demo
 
 ### 📱 Send a Message
+
 ```
 User: "What can I make with pasta and tomato?"
 AI: "You can make classic Cacio e Pepe, Pasta al Pomodoro..."
 ```
 
 ### 📸 Send an Image + Question
+
 ```
 User: [uploads photo of ingredients]
 User: "What recipe can I make?"
 AI: [analyzes image with Gemini 1.5 Pro]
-AI: "Based on the tomatoes, basil, and mozzarella, 
+AI: "Based on the tomatoes, basil, and mozzarella,
       I recommend Caprese Salad or Margherita Pizza..."
 ```
 
@@ -101,13 +106,13 @@ AI: "Based on the tomatoes, basil, and mozzarella,
 
 ## Environment Variables Quick Reference
 
-| Variable | Example | Required |
-|----------|---------|----------|
-| `NEXTAUTH_SECRET` | Random 32+ chars | ✅ Yes |
-| `NEXTAUTH_URL` | `http://localhost:3000` | ✅ Yes |
-| `GOOGLE_CLIENT_ID` | `xxx.apps.googleusercontent.com` | ✅ Yes |
-| `GOOGLE_CLIENT_SECRET` | `GOCSPX-xxx` | ✅ Yes |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000/api/v1` | ✅ Yes |
+| Variable               | Example                          | Required |
+| ---------------------- | -------------------------------- | -------- |
+| `NEXTAUTH_SECRET`      | Random 32+ chars                 | ✅ Yes   |
+| `NEXTAUTH_URL`         | `http://localhost:3000`          | ✅ Yes   |
+| `GOOGLE_CLIENT_ID`     | `xxx.apps.googleusercontent.com` | ✅ Yes   |
+| `GOOGLE_CLIENT_SECRET` | `GOCSPX-xxx`                     | ✅ Yes   |
+| `NEXT_PUBLIC_API_URL`  | `http://localhost:8000/api/v1`   | ✅ Yes   |
 
 ---
 
@@ -149,6 +154,7 @@ npm run test:coverage    # Coverage report
 ## Troubleshooting
 
 ### ❓ "OAuth mismatch" error
+
 ```
 → Check NEXTAUTH_URL matches your domain
 → Check redirect URI in Google Cloud Console
@@ -156,6 +162,7 @@ npm run test:coverage    # Coverage report
 ```
 
 ### ❓ Image upload not working
+
 ```
 → Verify backend is running on :8000
 → Check NEXT_PUBLIC_API_URL is correct
@@ -163,6 +170,7 @@ npm run test:coverage    # Coverage report
 ```
 
 ### ❓ Styles not applying
+
 ```
 → Run: npm run build
 → Check tailwind.config.js content paths
@@ -170,6 +178,7 @@ npm run test:coverage    # Coverage report
 ```
 
 ### ❓ Session lost on refresh
+
 ```
 → Verify NEXTAUTH_SECRET is set
 → Check browser cookies (should have nextauth.session-token)
@@ -202,7 +211,8 @@ Firestore
 
 ✅ **Done**: UI Refactor + Google Auth + Multimodal Chat
 
-📝 **TODO**: 
+📝 **TODO**:
+
 - [ ] Backend integration endpoints
 - [ ] Firestore schema migration
 - [ ] Deploy to production
@@ -214,10 +224,12 @@ Firestore
 ## Support
 
 **Docs**:
+
 - [SETUP.md](./SETUP.md) - Detailed setup
 - [REFACTOR_DOCUMENTATION.md](./REFACTOR_DOCUMENTATION.md) - Full design docs
 
 **Resources**:
+
 - [NextAuth Docs](https://next-auth.js.org/)
 - [Next.js Docs](https://nextjs.org/docs)
 - [Tailwind Docs](https://tailwindcss.com/)

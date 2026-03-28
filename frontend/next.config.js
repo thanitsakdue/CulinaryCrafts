@@ -11,7 +11,7 @@ const nextConfig = {
   // For Docker builds (Linux). On Windows local builds, standalone may attempt
   // symlinks into the output tree and fail without elevated permissions.
   output: isWindows ? undefined : 'standalone',
-  
+
   // API proxy to backend - only specific backend routes, NOT NextAuth
   async rewrites() {
     return [
@@ -39,7 +39,7 @@ const nextConfig = {
       },
     ]
   },
-  
+
   // CORS configuration
   async headers() {
     return [

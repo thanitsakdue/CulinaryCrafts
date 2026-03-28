@@ -4,25 +4,24 @@
 
 ### Color Palette (Warm, Fresh, Appetizing)
 
-| Color | HEX | Usage |
-|-------|-----|-------|
-| **Cream (BG)** | `#FFFCF2` | Primary background - warm, inviting |
-| **Warm White** | `#FAF8F3` | Cards, containers |
-| **Terracotta** | `#FF6B35` | Primary CTA, highlights, user messages |
-| **Coral** | `#FF8A50` | Hover states, tertiary elements |
-| **Honey Gold** | `#FFB562` | Accent, special highlights |
-| **Sage Green** | `#4F772D` | Health/vegetable elements, secondary CTAs |
-| **Dark Sage** | `#2D5016` | Dark sage for contrast |
-| **Gold** | `#D4A574` | Borders, subtle accents |
-| **Deep Brown** | `#3E2723` | Text, primary content |
-| **Light Cream** | `#FFF9ED` | Light backgrounds, tertiary surfaces |
+| Color           | HEX       | Usage                                     |
+| --------------- | --------- | ----------------------------------------- |
+| **Cream (BG)**  | `#FFFCF2` | Primary background - warm, inviting       |
+| **Warm White**  | `#FAF8F3` | Cards, containers                         |
+| **Terracotta**  | `#FF6B35` | Primary CTA, highlights, user messages    |
+| **Coral**       | `#FF8A50` | Hover states, tertiary elements           |
+| **Honey Gold**  | `#FFB562` | Accent, special highlights                |
+| **Sage Green**  | `#4F772D` | Health/vegetable elements, secondary CTAs |
+| **Dark Sage**   | `#2D5016` | Dark sage for contrast                    |
+| **Gold**        | `#D4A574` | Borders, subtle accents                   |
+| **Deep Brown**  | `#3E2723` | Text, primary content                     |
+| **Light Cream** | `#FFF9ED` | Light backgrounds, tertiary surfaces      |
 
 ### Typography
 
 - **Display (Headings)**: Playfair Display 700/800
   - Refined, sophisticated serif for titles
   - Creates premium, editorial feel
-  
 - **Body/UI**: Poppins 400-700
   - Friendly yet modern sans-serif
   - Rounded letterforms for warmth
@@ -36,6 +35,7 @@
 **Aesthetic Direction**: Warm, Sophisticated Culinary
 
 The interface feels like stepping into an upscale, modern kitchen. Every element is intentional:
+
 - **Soften the edges**: Rounded corners (rounded-full buttons, rounded-2xl cards)
 - **Organic motion**: Animations mimic cooking (rising, simmering, plating)
 - **Warm palette**: Inviting, never sterile or corporate
@@ -59,12 +59,12 @@ Redirect to /chat (authenticated)
 
 ### Key Changes from LINE Login
 
-| Aspect | Old (LINE) | New (Google) |
-|--------|-----------|------------|
-| **Provider** | LINE Social SDK | Google OAuth 2.0 |
-| **User ID** | LINE UID | Google account ID |
-| **Session Store** | JWT in localStorage | NextAuth session |
-| **Profile Data** | LINE profile | Google profile (photo, name, email) |
+| Aspect            | Old (LINE)              | New (Google)                                |
+| ----------------- | ----------------------- | ------------------------------------------- |
+| **Provider**      | LINE Social SDK         | Google OAuth 2.0                            |
+| **User ID**       | LINE UID                | Google account ID                           |
+| **Session Store** | JWT in localStorage     | NextAuth session                            |
+| **Profile Data**  | LINE profile            | Google profile (photo, name, email)         |
 | **Database Link** | Firestore: line_user_id | Firestore: google_id (user.id from session) |
 
 ### Configuration
@@ -81,11 +81,11 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 ```typescript
 session.user = {
-  id: "google-account-id",        // Provider ID for DB
+  id: "google-account-id", // Provider ID for DB
   email: "user@example.com",
   name: "John Doe",
-  image: "https://lh3.googleusercontent.com/..."
-}
+  image: "https://lh3.googleusercontent.com/...",
+};
 ```
 
 ## 📱 Multimodal Chat Interface
@@ -93,22 +93,26 @@ session.user = {
 ### Features
 
 **Text Chat**
+
 - Send cooking questions, recipe requests
 - AI responses from Gemini 1.5 Pro
 - Timestamps for each message
 
 **Image Upload** (3 methods)
+
 1. **Gallery Upload**: Click 📎 button → select from device
 2. **Camera Capture**: Click 📷 button → capture with device camera (mobile)
 3. **Drag & Drop**: (optional enhancement)
 
 **Image Handling**
+
 - Preview thumbnail before sending
 - Converted to Base64 for transmission
 - Includes MIME type (image/jpeg, image/png)
 - Remove button to clear selection
 
 **Multimodal Payload**
+
 ```json
 {
   "message": "What can I make with these ingredients?",
@@ -140,12 +144,14 @@ session.user = {
 ### Message Styling
 
 **User Message**:
+
 - Gradient background: terracotta → coral
 - White text
 - Rounded top-left, rounded top-right: 0 (square corner near input)
 - Right-aligned
 
 **AI Message**:
+
 - Warm white card background
 - Deep brown text
 - Fully rounded corners
@@ -191,6 +197,7 @@ frontend/
 ```
 
 **Features**:
+
 - Auto-scrolls to latest message
 - Loading state with spinner
 - Image preview with remove button
@@ -208,6 +215,7 @@ frontend/
 ```
 
 **Props**:
+
 - `onImageSelected`: Callback with base64, MIME type, File object
 - `onRemove`: Optional callback when removing image
 - `preview`: Image data URL to display thumbnail
@@ -222,6 +230,7 @@ frontend/
 ```
 
 **Props**:
+
 - `onLogin`: Callback after successful OAuth
 - `isLoading`: Show loading state
 
@@ -284,7 +293,7 @@ FileReader converts to Base64 data URL
 Thumbnail displayed in preview area
    ↓
 Base64 string sent in JSON payload
-   
+
 Backend:
    ↓
 Decode Base64 → Image object
@@ -298,33 +307,37 @@ Get response with vision analysis
 
 ### Global Animations
 
-| Name | Duration | Effect |
-|------|----------|--------|
-| `rise` | 2s | Fade in + slide up (0 → 0px) |
-| `simmer` | 4s ∞ | Subtle scale pulse (1 → 1.02) |
-| `plate` | 0.8s | Plating effect (3D rotation + scale) |
-| `fadeIn` | 0.6s | Simple fade in |
-| `slideUp` | 0.5s | Slide up from bottom |
+| Name      | Duration | Effect                               |
+| --------- | -------- | ------------------------------------ |
+| `rise`    | 2s       | Fade in + slide up (0 → 0px)         |
+| `simmer`  | 4s ∞     | Subtle scale pulse (1 → 1.02)        |
+| `plate`   | 0.8s     | Plating effect (3D rotation + scale) |
+| `fadeIn`  | 0.6s     | Simple fade in                       |
+| `slideUp` | 0.5s     | Slide up from bottom                 |
 
 ### Component-Specific Animations
 
 **Login Page**:
+
 - Chef emoji animates with scale pulse
 - Page slides up on load
 - Staggered item reveals (0.2s delay)
 
 **Chat Messages**:
+
 - Fade in + slide in on arrival
 - Smooth auto-scroll
 - Loading spinner (rotating)
 
 **Buttons**:
+
 - Hover: slight scale (1.02)
 - Click: scale down (0.98) + shadow
 
 ## 📊 Responsive Design
 
 ### Breakpoints (Tailwind)
+
 - Mobile: < 640px
 - Tablet: 640px - 1024px
 - Desktop: > 1024px
@@ -344,21 +357,23 @@ lg:text-5xl         /* Large screen maximum size */
 
 ### Chat Interface Responsiveness
 
-| Screen | Layout |
-|--------|--------|
-| Mobile | Single column, full width input, smaller card |
-| Tablet | Max-width container, medium padding |
-| Desktop | Max-width 4xl container, generous padding |
+| Screen  | Layout                                        |
+| ------- | --------------------------------------------- |
+| Mobile  | Single column, full width input, smaller card |
+| Tablet  | Max-width container, medium padding           |
+| Desktop | Max-width 4xl container, generous padding     |
 
 ## 🔗 Integration Checklist
 
 ### Frontend Setup
+
 - [ ] Install dependencies: `npm install`
 - [ ] Set environment variables in `.env.local`
 - [ ] Create Google OAuth credentials
 - [ ] Test local development: `npm run dev`
 
 ### Backend Requirements
+
 - [ ] POST `/api/v1/chat` endpoint (text only)
 - [ ] POST `/api/v1/chat/multimodal` endpoint (text + image)
 - [ ] Add `Authorization: Bearer <token>` support
@@ -367,6 +382,7 @@ lg:text-5xl         /* Large screen maximum size */
 - [ ] Configure CORS to allow frontend origin
 
 ### Database Migration
+
 - [ ] Create `users` collection with google_id as document ID
 - [ ] Migrate user preferences from LINE-based storage
 - [ ] Update chat history queries to use google_id
@@ -423,42 +439,52 @@ python -m uvicorn app.main:app --reload
 ## 📦 Dependencies
 
 ### Core
+
 - **next**: 14.0+ (React framework)
 - **react**: 18.2+ (UI library)
 - **typescript**: 5.2+ (type safety)
 
 ### Styling
+
 - **tailwindcss**: 3.3+ (utility CSS)
 - **@tailwindcss/forms**: Form components
 - **@tailwindcss/typography**: Rich text styles
 
 ### Interaction
+
 - **framer-motion**: 10.16+ (animations)
 - **lucide-react**: 0.292+ (icons)
 - **react-hook-form**: 7.48+ (form handling)
 
 ### Auth
+
 - **next-auth**: 5.0+ (authentication)
 
 ### API
+
 - **axios**: 1.6+ (HTTP client)
 - **react-query**: 3.39+ (data fetching)
 
 ## 🚨 Common Issues & Solutions
 
 ### OAuth Error: "Redirect URI mismatch"
+
 **Solution**: Ensure `NEXTAUTH_URL` environment variable matches registered URI in Google Cloud Console.
 
 ### Image Not Uploading
+
 **Solution**: Check CORS headers in backend response. Allow `Content-Type: multipart/form-data`.
 
 ### Session Lost on Refresh
+
 **Solution**: Verify `NEXTAUTH_SECRET` is set and consistent. Clear browser cookies and try again.
 
 ### Messages Not Scrolling to Bottom
+
 **Solution**: Ensure `messagesEndRef.current?.scrollIntoView()` is called in `useEffect([messages])`.
 
 ### Tailwind Styles Not Applied
+
 **Solution**: Check `tailwind.config.js` content paths match your component files.
 
 ## 🎯 Future Enhancements

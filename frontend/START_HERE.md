@@ -4,7 +4,7 @@
 **Date**: March 28, 2026  
 **Time Invested**: Comprehensive Full-Stack Refactor  
 **Lines of Code**: 6400+ (production-quality)  
-**Lines of Documentation**: 5000+ (comprehensive guides)  
+**Lines of Documentation**: 5000+ (comprehensive guides)
 
 ---
 
@@ -16,45 +16,50 @@ Your Culinary Crafts frontend has been transformed from a dark cyberpunk theme t
 ✅ **Multimodal AI Chat** (text + image to Gemini 1.5 Pro)  
 ✅ **Warm Aesthetic** (cream + terracotta + sage green)  
 ✅ **Production-Grade Code** (TypeScript, tested, documented)  
-✅ **Comprehensive Documentation** (5000+ lines)  
+✅ **Comprehensive Documentation** (5000+ lines)
 
 ---
 
 ## 📊 WHAT YOU RECEIVED
 
 ### Components (4 New + High Quality)
-| Component | Purpose | Lines |
-|-----------|---------|-------|
-| **ChatInterface.tsx** | Main multimodal chat UI | 180+ |
-| **ImageAttachment.tsx** | Gallery upload + camera | 100+ |
-| **GoogleLoginPage.tsx** | OAuth login screen | 150+ |
-| **DesignSystemPreview.tsx** | Design showcase | 200+ |
+
+| Component                   | Purpose                 | Lines |
+| --------------------------- | ----------------------- | ----- |
+| **ChatInterface.tsx**       | Main multimodal chat UI | 180+  |
+| **ImageAttachment.tsx**     | Gallery upload + camera | 100+  |
+| **GoogleLoginPage.tsx**     | OAuth login screen      | 150+  |
+| **DesignSystemPreview.tsx** | Design showcase         | 200+  |
 
 ### Pages (3 New)
-| Page | Purpose | Protected |
-|------|---------|-----------|
-| **chat.tsx** | Main chat interface | ✅ Yes |
-| **profile.tsx** | User profile & sign-out | ✅ Yes |
-| **api/auth/[...nextauth].ts** | OAuth handler | - |
+
+| Page                          | Purpose                 | Protected |
+| ----------------------------- | ----------------------- | --------- |
+| **chat.tsx**                  | Main chat interface     | ✅ Yes    |
+| **profile.tsx**               | User profile & sign-out | ✅ Yes    |
+| **api/auth/[...nextauth].ts** | OAuth handler           | -         |
 
 ### Services & Types
-| File | Interfaces | Methods |
-|------|-----------|---------|
-| **apiClient.ts** | ChatMessage, Response | 5 API methods |
-| **types/index.ts** | 30+ TypeScript types | - |
+
+| File               | Interfaces            | Methods       |
+| ------------------ | --------------------- | ------------- |
+| **apiClient.ts**   | ChatMessage, Response | 5 API methods |
+| **types/index.ts** | 30+ TypeScript types  | -             |
 
 ### Documentation (7 Files, 5000+ lines)
-| File | Purpose | Read Time |
-|------|---------|-----------|
-| **QUICKSTART.md** | 5-minute setup | 5 min |
-| **SETUP.md** | Detailed guide | 20 min |
-| **REFACTOR_DOCUMENTATION.md** | Full design system | 30 min |
-| **README_REFACTOR_SUMMARY.md** | Executive summary | 15 min |
-| **FILE_INDEX.md** | File reference | 10 min |
-| **DELIVERABLES.md** | Asset inventory | 10 min |
-| **.env.example** | Environment template | 2 min |
+
+| File                           | Purpose              | Read Time |
+| ------------------------------ | -------------------- | --------- |
+| **QUICKSTART.md**              | 5-minute setup       | 5 min     |
+| **SETUP.md**                   | Detailed guide       | 20 min    |
+| **REFACTOR_DOCUMENTATION.md**  | Full design system   | 30 min    |
+| **README_REFACTOR_SUMMARY.md** | Executive summary    | 15 min    |
+| **FILE_INDEX.md**              | File reference       | 10 min    |
+| **DELIVERABLES.md**            | Asset inventory      | 10 min    |
+| **.env.example**               | Environment template | 2 min     |
 
 ### Design System
+
 - **10 Custom Colors** with culinary theme
 - **2 Typefaces** (Playfair Display + Poppins)
 - **5 Animations** (rise, simmer, plate, fadeIn, slideUp)
@@ -65,6 +70,7 @@ Your Culinary Crafts frontend has been transformed from a dark cyberpunk theme t
 ## 🎨 DESIGN SYSTEM AT A GLANCE
 
 ### Color Palette
+
 ```
 🟡 Cream          #FFFCF2  → Warm, inviting background
 🔶 Terracotta     #FF6B35  → Primary CTA button color
@@ -73,6 +79,7 @@ Your Culinary Crafts frontend has been transformed from a dark cyberpunk theme t
 ```
 
 ### Typography
+
 ```
 Playfair Display (Serif)     → Headings - Sophisticated
 Poppins (Rounded Sans)       → Body - Friendly & Modern
@@ -80,6 +87,7 @@ Space Mono (Monospace)       → Code - Technical
 ```
 
 ### Component Examples
+
 ```tsx
 <button className="btn-primary-lg">Send Message</button>
 <div className="culinary-card">Chat message</div>
@@ -92,11 +100,13 @@ Space Mono (Monospace)       → Code - Technical
 ## 🔐 AUTHENTICATION: FROM LINE TO GOOGLE
 
 ### Old System
+
 ```
 User → LINE Login → LINE ID → Database → App
 ```
 
 ### New System
+
 ```
 User → "Continue with Google" → Google OAuth
   → Session (JWT + Cookie) → Firestore (google_id)
@@ -104,13 +114,14 @@ User → "Continue with Google" → Google OAuth
 ```
 
 ### User Session Object
+
 ```typescript
 session.user = {
-  id: "google-account-id",      // Use as Firestore key
+  id: "google-account-id", // Use as Firestore key
   email: "user@example.com",
   name: "John Doe",
-  image: "https://lh3.googleusercontent.com/..."
-}
+  image: "https://lh3.googleusercontent.com/...",
+};
 ```
 
 ---
@@ -118,12 +129,14 @@ session.user = {
 ## 💬 MULTIMODAL CHAT FEATURES
 
 ### User Can:
+
 1. **Send Text** → AI responds with cooking advice
 2. **Upload Image** → From gallery (📎 button)
 3. **Capture Photo** → With camera (📷 button)
 4. **Send Text + Image** → Gemini 1.5 Pro analyzes both
 
 ### Behind the Scenes:
+
 ```
 Image Upload
   ↓ (Convert to Base64)
@@ -186,12 +199,14 @@ frontend/
 ## 🚀 NEXT STEPS: GET RUNNING IN 5 MINUTES
 
 ### Step 1: Install
+
 ```bash
 cd frontend
 npm install
 ```
 
 ### Step 2: Configure
+
 ```bash
 cp .env.example .env.local
 # Edit .env.local with:
@@ -201,12 +216,14 @@ cp .env.example .env.local
 ```
 
 ### Step 3: Run
+
 ```bash
 npm run dev
 # Visit http://localhost:3000
 ```
 
 ### Step 4: Test OAuth
+
 1. Click "Continue with Google"
 2. Complete Google login
 3. Redirected to chat page
@@ -217,6 +234,7 @@ npm run dev
 ## 🔗 BACKEND INTEGRATION
 
 ### Endpoint 1: Text Chat
+
 ```
 POST /api/v1/chat
 {
@@ -229,6 +247,7 @@ Response:
 ```
 
 ### Endpoint 2: Multimodal Chat
+
 ```
 POST /api/v1/chat/multimodal
 {
@@ -243,6 +262,7 @@ Response:
 ```
 
 ### Database: Firestore Schema
+
 ```
 users/
   {googleId}/
@@ -261,18 +281,21 @@ users/
 ## ✨ KEY FEATURES AT A GLANCE
 
 ### Visual Identity
+
 ✅ Warm, appetizing palette (not generic AI-generated)
 ✅ Sophisticated serif headings + friendly body text
 ✅ Rounded corners, generous spacing, organic animations
 ✅ Deeply themed around cooking/kitchen aesthetic
 
 ### Authentication
+
 ✅ One-click Google login
 ✅ Secure session management (JWT + cookies)
 ✅ User profile picture + name display
 ✅ Easy sign-out
 
 ### Chat Capabilities
+
 ✅ Send text questions about recipes/ingredients
 ✅ Upload images from device gallery
 ✅ Capture photos with device camera
@@ -281,6 +304,7 @@ users/
 ✅ Loading states + error handling
 
 ### Code Quality
+
 ✅ Full TypeScript type safety
 ✅ Production-grade components
 ✅ ESLint + Prettier configured
@@ -289,6 +313,7 @@ users/
 ✅ Comprehensive error handling
 
 ### Documentation
+
 ✅ 5000+ lines of guides
 ✅ Quick-start (5 min)
 ✅ Detailed setup (20 min)
@@ -299,24 +324,25 @@ users/
 
 ## 📈 BY THE NUMBERS
 
-| Metric | Value |
-|--------|-------|
-| **New Components** | 4 |
-| **New Pages** | 3 |
-| **New Services** | 1 |
-| **New Type Definitions** | 30+ |
-| **Production Code Lines** | 6400+ |
-| **Documentation Lines** | 5000+ |
-| **Design Colors** | 10 |
-| **Custom Animations** | 5 |
-| **Component Utilities** | 15+ |
-| **Setup Time** | 5 minutes |
+| Metric                    | Value     |
+| ------------------------- | --------- |
+| **New Components**        | 4         |
+| **New Pages**             | 3         |
+| **New Services**          | 1         |
+| **New Type Definitions**  | 30+       |
+| **Production Code Lines** | 6400+     |
+| **Documentation Lines**   | 5000+     |
+| **Design Colors**         | 10        |
+| **Custom Animations**     | 5         |
+| **Component Utilities**   | 15+       |
+| **Setup Time**            | 5 minutes |
 
 ---
 
 ## 🎯 SUCCESS CHECKLIST
 
 ### Requirements Met
+
 ✅ UI/UX Redesign - Warm, fresh, appetizing theme
 ✅ Multimodal Chat - Text + image support
 ✅ Image Upload - Gallery & camera capture
@@ -327,6 +353,7 @@ users/
 ✅ Documentation - 5000+ comprehensive lines
 
 ### Quality Metrics
+
 ✅ Production-ready code
 ✅ Professional architecture
 ✅ Comprehensive testing readiness
@@ -359,12 +386,14 @@ users/
 This isn't just a color swap. It's a **complete aesthetic transformation**:
 
 ### Before
+
 - Dark, cyberpunk theme (felt sterile)
 - Emerald + amber accents (generic neon)
 - Sharp, modern tech aesthetic
 - LINE authentication (Asian-specific)
 
 ### After
+
 - Warm, culinary theme (feels inviting)
 - Terracotta + sage green (authentic to cooking)
 - Sophisticated, human aesthetic
@@ -376,22 +405,26 @@ This isn't just a color swap. It's a **complete aesthetic transformation**:
 ## 🎁 BONUS FEATURES
 
 ✨ **Design System Showcase Component**
+
 - Visualize all colors, buttons, cards
 - Test animations live
 - Great for onboarding + QA
 
 ✨ **Comprehensive Type System**
+
 - 30+ carefully crafted interfaces
 - Better IDE autocomplete
 - Type-safe API calls
 
 ✨ **Professional Documentation**
+
 - Step-by-step guides
 - Troubleshooting section
 - Integration examples
 - Backend requirements
 
 ✨ **VS Code Configuration**
+
 - ESLint + Prettier setup
 - TypeScript optimized
 - Tailwind helpers included
@@ -401,6 +434,7 @@ This isn't just a color swap. It's a **complete aesthetic transformation**:
 ## 🎓 LEARNING RESOURCES
 
 **Frontend Stack**:
+
 - [Next.js](https://nextjs.org/docs) - React framework
 - [NextAuth.js](https://next-auth.js.org/) - Authentication
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
@@ -408,6 +442,7 @@ This isn't just a color swap. It's a **complete aesthetic transformation**:
 - [TypeScript](https://www.typescriptlang.org/docs/) - Type Safety
 
 **Integration**:
+
 - [Google OAuth Setup](https://developers.google.com/identity/protocols/oauth2)
 - [Firestore Docs](https://firebase.google.com/docs/firestore)
 - [Gemini API](https://ai.google.dev/docs)
@@ -417,20 +452,24 @@ This isn't just a color swap. It's a **complete aesthetic transformation**:
 ## 🚨 QUICK TROUBLESHOOTING
 
 ### OAuth Error: redirect_uri_mismatch
+
 → Check that NEXTAUTH_URL matches your domain
 → Verify redirect URI in Google Cloud Console
 
 ### Image won't upload
+
 → Ensure backend CORS is configured
 → Check NEXT_PUBLIC_API_URL is correct
 → Verify backend supports multipart/form-data
 
 ### Styles not applying
+
 → Run: `npm run build`
 → Restart dev server
 → Clear Next.js cache: `rm -rf .next`
 
 ### More issues?
+
 → Check browser console for errors
 → Review **SETUP.md** troubleshooting section
 → Check backend logs

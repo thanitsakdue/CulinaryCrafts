@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -19,14 +19,19 @@
 
   body {
     @apply bg-culinary-cream text-culinary-deepBrown;
-    font-family: 'Poppins', sans-serif;
+    font-family: "Poppins", sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Playfair Display', serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Playfair Display", serif;
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: #3E2723;
+    color: #3e2723;
   }
 
   h1 {
@@ -42,13 +47,13 @@
   }
 
   code {
-    font-family: 'Space Mono', monospace;
+    font-family: "Space Mono", monospace;
   }
 }
 
 @layer components {
   /* Culinary Design System */
-  
+
   .culinary-glass {
     @apply backdrop-blur-md bg-culinary-cream/80 border border-culinary-terracotta/10 rounded-2xl;
   }
@@ -164,7 +169,6 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 107, 53, 0.5);
 }
-  
 
 .animate-float {
   animation: float 6s ease-in-out infinite;

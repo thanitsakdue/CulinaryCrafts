@@ -15,14 +15,14 @@ The Culinary Crafts frontend has been comprehensively refactored from a dark cyb
 
 ### Key Achievements ✅
 
-| Requirement | Status | Implementation |
-|---|---|---|
-| **UI/UX Redesign** | ✅ Complete | Warm palette: cream, terracotta, sage green, gold |
-| **Multimodal Chat** | ✅ Complete | Text + image upload (gallery/camera) + Gemini integration |
-| **Google Auth** | ✅ Complete | NextAuth.js + OAuth 2.0 with Google Provider |
-| **Responsive Design** | ✅ Complete | Mobile-first, optimized for all screen sizes |
-| **TypeScript** | ✅ Complete | Full type safety with custom interfaces |
-| **Tailwind CSS** | ✅ Complete | Custom design system tokens + utilities |
+| Requirement           | Status      | Implementation                                            |
+| --------------------- | ----------- | --------------------------------------------------------- |
+| **UI/UX Redesign**    | ✅ Complete | Warm palette: cream, terracotta, sage green, gold         |
+| **Multimodal Chat**   | ✅ Complete | Text + image upload (gallery/camera) + Gemini integration |
+| **Google Auth**       | ✅ Complete | NextAuth.js + OAuth 2.0 with Google Provider              |
+| **Responsive Design** | ✅ Complete | Mobile-first, optimized for all screen sizes              |
+| **TypeScript**        | ✅ Complete | Full type safety with custom interfaces                   |
+| **Tailwind CSS**      | ✅ Complete | Custom design system tokens + utilities                   |
 
 ---
 
@@ -31,14 +31,14 @@ The Culinary Crafts frontend has been comprehensively refactored from a dark cyb
 ### Color Palette (Culinary Theme)
 
 ```css
---cream: #FFFCF2;           /* Background - warm, inviting */
---warm-white: #FAF8F3;      /* Cards, containers */
---terracotta: #FF6B35;      /* Primary CTA, user messages */
---coral: #FF8A50;           /* Hover states */
---honey-gold: #FFB562;      /* Accents */
---sage-green: #4F772D;      /* Health/secondary elements */
---gold: #D4A574;            /* Subtle accents */
---deep-brown: #3E2723;      /* Text */
+--cream: #fffcf2; /* Background - warm, inviting */
+--warm-white: #faf8f3; /* Cards, containers */
+--terracotta: #ff6b35; /* Primary CTA, user messages */
+--coral: #ff8a50; /* Hover states */
+--honey-gold: #ffb562; /* Accents */
+--sage-green: #4f772d; /* Health/secondary elements */
+--gold: #d4a574; /* Subtle accents */
+--deep-brown: #3e2723; /* Text */
 ```
 
 ### Typography
@@ -95,6 +95,7 @@ Redirect to /chat (Protected Route)
 ### Configuration Required
 
 **.env.local**:
+
 ```env
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=<random-32-char-key>
@@ -107,11 +108,11 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 ```typescript
 session.user = {
-  id: "google-account-id",      // Use this as Firebase key
+  id: "google-account-id", // Use this as Firebase key
   email: "user@example.com",
   name: "John Doe",
-  image: "https://lh3.googleusercontent.com/..."
-}
+  image: "https://lh3.googleusercontent.com/...",
+};
 ```
 
 ---
@@ -121,17 +122,20 @@ session.user = {
 ### Features
 
 ✅ **Text Chat**
+
 - Send cooking questions/requests
 - Receive AI responses (Gemini 1.5 Pro)
 - Timestamp tracking
 
 ✅ **Image Upload**
+
 - Gallery upload (📎 button)
 - Camera capture (📷 button, mobile-optimized)
 - Preview thumbnail before sending
 - Remove/replace functionality
 
 ✅ **Image Transmission**
+
 - Converted to Base64 string
 - Sent as JSON payload
 - Includes MIME type
@@ -139,6 +143,7 @@ session.user = {
 ### API Payload
 
 **Text Only**:
+
 ```json
 POST /api/v1/chat
 {
@@ -147,6 +152,7 @@ POST /api/v1/chat
 ```
 
 **Multimodal (Text + Image)**:
+
 ```json
 POST /api/v1/chat/multimodal
 {
@@ -253,6 +259,7 @@ npm run dev
 ```
 
 **Already Present** (No changes needed):
+
 - framer-motion ✓
 - axios ✓
 - lucide-react ✓
@@ -271,6 +278,7 @@ npm run dev
 ```
 
 **Features**:
+
 - Auto-scrolling message list
 - Image preview with remove button
 - Loading state with spinner
@@ -292,6 +300,7 @@ npm run dev
 ```
 
 **Features**:
+
 - Gallery upload button
 - Camera capture button
 - Image preview thumbnail
@@ -306,6 +315,7 @@ npm run dev
 ```
 
 **Features**:
+
 - Single "Continue with Google" button
 - Animated background
 - Benefits section
@@ -320,6 +330,7 @@ npm run dev
 ```
 
 **Features**:
+
 - Color palette showcase
 - Typography examples
 - Button states
@@ -377,11 +388,11 @@ Auto-scroll to bottom
 
 ### Breakpoints
 
-| Device | Width | Layout |
-|--------|-------|--------|
-| Mobile | <640px | Single column, full width |
-| Tablet | 640-1024px | Medium container, padding |
-| Desktop | >1024px | Max-width 4xl, generous space |
+| Device  | Width      | Layout                        |
+| ------- | ---------- | ----------------------------- |
+| Mobile  | <640px     | Single column, full width     |
+| Tablet  | 640-1024px | Medium container, padding     |
+| Desktop | >1024px    | Max-width 4xl, generous space |
 
 ### Key Responsive Classes
 
@@ -402,6 +413,7 @@ lg:grid-cols-3        /* Desktop */
 ### Required Endpoints
 
 **1. Text Chat**
+
 ```
 POST /api/v1/chat
 Authorization: Bearer <token>
@@ -418,6 +430,7 @@ Response:
 ```
 
 **2. Multimodal Chat**
+
 ```
 POST /api/v1/chat/multimodal
 Authorization: Bearer <token>
@@ -478,28 +491,30 @@ Response:
 
 ## 📚 Documentation Files
 
-| File | Purpose |
-|------|---------|
-| **QUICKSTART.md** | 5-minute setup guide |
-| **SETUP.md** | Detailed setup & integration |
-| **REFACTOR_DOCUMENTATION.md** | Full design system docs |
-| **.env.example** | Environment template |
-| **README_REFACTOR_SUMMARY.md** | This file |
+| File                           | Purpose                      |
+| ------------------------------ | ---------------------------- |
+| **QUICKSTART.md**              | 5-minute setup guide         |
+| **SETUP.md**                   | Detailed setup & integration |
+| **REFACTOR_DOCUMENTATION.md**  | Full design system docs      |
+| **.env.example**               | Environment template         |
+| **README_REFACTOR_SUMMARY.md** | This file                    |
 
 ---
 
 ## 🚨 Common Issues & Solutions
 
 ### OAuth Redirect Mismatch
+
 ```
 Error: "redirect_uri_mismatch"
-Fix: 
+Fix:
   1. Check NEXTAUTH_URL matches your domain
   2. Add /api/auth/callback/google to Google Console redirect URIs
   3. Clear browser cookies and try again
 ```
 
 ### Image Upload CORS Error
+
 ```
 Error: "Cross-Origin Request Blocked"
 Fix:
@@ -509,6 +524,7 @@ Fix:
 ```
 
 ### TypeScript Errors
+
 ```
 Error: "Cannot find module" or type errors
 Fix:
@@ -518,6 +534,7 @@ Fix:
 ```
 
 ### Chat Not Loading
+
 ```
 Error: Empty messages or chat won't display
 Fix:
@@ -532,16 +549,19 @@ Fix:
 ## 🎯 Next Steps (Post-Launch)
 
 ### Phase 1: Polish (Week 1)
+
 - [ ] Backend API integration testing
 - [ ] User preference storage
 - [ ] Chat history UI
 
 ### Phase 2: Features (Week 2-3)
+
 - [ ] Bookmark/favorite recipes
 - [ ] Dietary restrictions UI
 - [ ] Voice input support
 
 ### Phase 3: Scale (Week 4+)
+
 - [ ] Production deployment
 - [ ] Performance optimization
 - [ ] Analytics integration
@@ -584,11 +604,13 @@ Fix:
 ## 📞 Support
 
 **Quick Help**:
+
 - Check [QUICKSTART.md](./QUICKSTART.md) for 5-min setup
 - Check [SETUP.md](./SETUP.md) for detailed integration
 - Check [REFACTOR_DOCUMENTATION.md](./REFACTOR_DOCUMENTATION.md) for full design docs
 
 **Troubleshooting**:
+
 1. Check browser console for errors
 2. Verify all environment variables are set
 3. Restart dev server: `npm run dev`
@@ -606,7 +628,7 @@ The Culinary Crafts frontend is now **production-ready** with:
 ✅ Full TypeScript type safety  
 ✅ Responsive mobile/tablet/desktop  
 ✅ Well-documented codebase  
-✅ Ready for Firestore integration  
+✅ Ready for Firestore integration
 
 **Ready to cook with AI! 👨‍🍳🧡**
 

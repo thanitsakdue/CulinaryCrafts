@@ -1,7 +1,8 @@
 # Culinary Crafts Frontend - Setup Instructions
 
 ## Prerequisites
-- Node.js 18.17+ 
+
+- Node.js 18.17+
 - npm 9+
 
 ## Installation Steps
@@ -65,6 +66,7 @@ Visit `http://localhost:3000` in your browser.
 ## Features
 
 ### Authentication Flow
+
 1. User lands on homepage (`/`)
 2. Clicks "Continue with Google" button
 3. Redirected to Google login
@@ -72,8 +74,9 @@ Visit `http://localhost:3000` in your browser.
 5. Chat interface loads with authenticated session
 
 ### Chat Features
+
 - **Text Messages**: Send text queries about recipes, ingredients
-- **Image Upload**: 
+- **Image Upload**:
   - Click gallery icon → upload from device
   - Click camera icon → capture with device camera
 - **Image Preview**: Thumbnail shown before sending
@@ -81,6 +84,7 @@ Visit `http://localhost:3000` in your browser.
 - **Timestamps**: Each message shows time sent
 
 ### User Profile
+
 - Access at `/profile` or click username in chat header
 - Shows Google profile picture, name, email
 - Option to sign out
@@ -130,6 +134,7 @@ Response:
 Update your database schema to use Google Provider ID:
 
 **Old (LINE-based)**:
+
 ```sql
 users:
   - line_user_id (primary key)
@@ -137,6 +142,7 @@ users:
 ```
 
 **New (Google-based)**:
+
 ```sql
 users:
   - google_id (primary key) -- from session.user.id
@@ -152,7 +158,7 @@ users:
 ```typescript
 // In your backend or frontend service
 async function initializeUserProfile(googleId: string, userEmail: string) {
-  const userRef = db.collection('users').doc(googleId)
+  const userRef = db.collection("users").doc(googleId);
   await userRef.set(
     {
       email: userEmail,
@@ -162,26 +168,29 @@ async function initializeUserProfile(googleId: string, userEmail: string) {
         favoritesCuisines: [],
       },
     },
-    { merge: true }
-  )
+    { merge: true },
+  );
 }
 ```
 
 ## Development
 
 ### Build
+
 ```bash
 npm run build
 npm start
 ```
 
 ### Linting & Formatting
+
 ```bash
 npm run lint
 npm run format
 ```
 
 ### Type Checking
+
 ```bash
 npm run type-check
 ```
@@ -189,6 +198,7 @@ npm run type-check
 ## Deployment
 
 ### Vercel Deployment
+
 ```bash
 npm install -g vercel
 vercel
@@ -201,6 +211,7 @@ vercel
 ```
 
 ### Docker Deployment
+
 See `frontend/Dockerfile`
 
 ```bash
@@ -216,16 +227,19 @@ docker run -p 3000:3000 \
 ## Troubleshooting
 
 ### OAuth Callback Issues
+
 - Ensure `NEXTAUTH_URL` matches your deployment URL
 - Check redirect URIs in Google Cloud Console
 - Clear browser cookies and try again
 
 ### Image Upload Not Working
+
 - Verify `NEXT_PUBLIC_API_URL` points to correct API
 - Check browser console for CORS errors
 - API backend must support `Content-Type: multipart/form-data`
 
 ### Chat History Not Persisting
+
 - Implement chat history storage in your backend
 - Endpoint: `GET /api/v1/chat/history` (optional)
 - Link chat history to Google user ID in database
@@ -251,6 +265,7 @@ Backend (FastAPI)
 ## Support
 
 For issues or questions:
+
 1. Check browser console for errors
 2. Review backend logs
 3. Ensure environment variables are set
