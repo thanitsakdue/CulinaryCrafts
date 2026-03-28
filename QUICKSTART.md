@@ -36,6 +36,49 @@
 
 ---
 
+## 🧑‍💻 Manual Dev Run (ไม่ใช้ Script / ไม่ใช้ venv)
+
+### 1) Backend (FastAPI)
+```powershell
+cd backend
+
+# ติดตั้ง dependency แบบเบา (ถ้ายังไม่ได้ติดตั้ง)
+pip install -r requirements-basic.txt
+
+# รัน API (ต้องอยู่ในโฟลเดอร์ backend)
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+ถ้าคุณอยากรันจากโฟลเดอร์ root (D:\GenAIPJ\CulinaryCrafts) ให้ใช้:
+```powershell
+python -m uvicorn app.main:app --reload --app-dir backend --host 0.0.0.0 --port 8000
+```
+
+### 2) Frontend (Next.js)
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+หมายเหตุ: Host dev จะ proxy `/api/*` ไปที่ `http://localhost:8000` โดยอัตโนมัติ
+
+---
+
+## ⚙️ .env (สำคัญ)
+
+ถ้าเจอ error แนวนี้:
+- `error parsing value for field "CORS_ORIGINS"`
+
+ให้ตั้งค่าฟิลด์ที่เป็น list ใน `.env` เป็น JSON array เช่น:
+```env
+CORS_ORIGINS=["http://localhost:3000","https://your-domain.com"]
+ALLOWED_HOSTS=["localhost","your-domain.com"]
+TRUSTED_PROXIES=["127.0.0.1"]
+```
+
+---
+
 ## 🔍 **ตรวจสอบว่าทำงานแล้วหรือยัง:**
 
 1. **Backend**: http://localhost:8000 - ควรแสดง welcome message

@@ -78,6 +78,25 @@ npm cache clean --force
 yarn install
 ```
 
+### 4b. **Next.js EPERM on `.next*/trace`**
+
+**Symptoms:**
+- `EPERM: operation not permitted, open '...\\.next\\trace'`
+- `next dev` / `next build` fails only on Windows
+
+**What’s happening:**
+Next.js writes a build/dev trace file named exactly `trace` under the Next build output directory. Some Windows security/AV configurations block creating a file with that exact name inside certain project folders.
+
+**Solution (already built-in for this repo):**
+- On Windows, the frontend is configured to write its Next.js build output *outside* the repo checkout using a relative `distDir`.
+- A small pre-script ensures the target folder exists before `next dev/build/start`.
+
+Run the frontend like normal:
+```powershell
+cd CulinaryCrafts\frontend
+npm run dev
+```
+
 ### 5. **Docker Issues**
 
 **Symptoms:**

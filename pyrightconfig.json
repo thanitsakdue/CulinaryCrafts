@@ -1,0 +1,18 @@
+{
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Windows",
+  "include": ["backend"],
+  "exclude": [
+    "**/.*",
+    "**/node_modules",
+    "**/__pycache__",
+    ".venv",
+    "**/.git",
+    "**/.pytest_cache",
+    "**/dist",
+    "**/build",
+    "**/*.egg-info",
+    "**/.env*"
+  ]
+}

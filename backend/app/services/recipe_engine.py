@@ -1,6 +1,5 @@
-from datasets import load_dataset
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -8,10 +7,27 @@ class RecipeEngine:
     def __init__(self):
         self.dataset = None
         self.recipes = []
+        self.disabled_reason: Optional[str] = None
 
     def initialize(self):
         """โหลด Dataset ภาษาไทยเตรียมไว้ใน Memory"""
+        # `datasets` (Hugging Face) is an optional dependency.
+        # Allow the API to start in minimal/basic installs without it.
         try:
+            try:
+                from datasets import load_dataset  # type: ignore
+            except ModuleNotFoundError as e:
+                self.disabled_reason = (
+                    "Optional dependency 'datasets' is not installed. "
+                    "Install backend/requirements.txt (full) or add 'datasets' to your environment "
+                    "to enable cookbook loading."
+                )
+                logger.warning(self.disabled_reason)
+                logger.debug(f"datasets import error: {e}")
+                self.dataset = None
+                self.recipes = []
+                return
+
             logger.info("📦 Loading Thai Food Dataset from Hugging Face...")
             ds = load_dataset("pythainlp/thai_food_v1.0")
             self.dataset = ds['train']
@@ -26,6 +42,7 @@ class RecipeEngine:
             logger.info(f"✅ Loaded {len(self.recipes)} recipes successfully!")
         except Exception as e:
             logger.error(f"❌ Failed to load dataset: {e}")
+            self.disabled_reason = str(e)
 
     def search(self, query: str, limit: int = 5):
         if not query:

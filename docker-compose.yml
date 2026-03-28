@@ -29,7 +29,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - default
+      - culinary-network
 
   # =================================
   # ⚛️ FRONTEND WEB APP
@@ -43,12 +43,13 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${API_URL}
+      - NEXT_PUBLIC_API_URL=${FRONTEND_API_URL:-http://localhost:3000/api}
+      - BACKEND_URL=http://culinary-backend:8000
     depends_on:
       - backend
     restart: unless-stopped
     networks:
-      - default
+      - culinary-network
 
   # =================================
   # 🔴 REDIS CACHE
@@ -69,6 +70,8 @@ services:
       timeout: 5s
       retries: 3
     restart: unless-stopped
+    networks:
+      - culinary-network
 
   # =================================
   # 🗄️ POSTGRESQL
@@ -85,11 +88,13 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d$${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 3
     restart: unless-stopped
+    networks:
+      - culinary-network
 
 # =================================
 # 💾 PERSISTENT VOLUMES
@@ -101,9 +106,11 @@ volumes:
     driver: local
 
 # =================================
-# 🌐 NETWORKS
+# 🌐 NETWORKS (Merged)
 # =================================
 networks:
+  culinary-network:
+    driver: bridge
   default:
     name: culinary-crafts
     driver: bridge
