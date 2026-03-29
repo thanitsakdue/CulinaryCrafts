@@ -1,21 +1,39 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
-import Head from 'next/head'
+import { SessionProvider } from 'next-auth/react'
+import type { Session } from 'next-auth'
+import { Poppins, Playfair_Display, Space_Mono } from 'next/font/google'
 
-function MyApp({ Component, pageProps }: AppProps) {
+// Load Google Fonts optimized by Next.js
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  variable: '--font-poppins',
+})
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  variable: '--font-playfair',
+})
+
+const spaceMono = Space_Mono({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-space-mono',
+})
+
+type AppPropsWithSession = AppProps<{ session?: Session | null }>
+
+function MyApp({ Component, pageProps }: AppPropsWithSession) {
+  const { session, ...restPageProps } = pageProps
+
   return (
-    <>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link 
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" 
-          rel="stylesheet" 
-        />
-      </Head>
-      <Component {...pageProps} />
-    </>
+    <div className={`${poppins.variable} ${playfair.variable} ${spaceMono.variable}`}>
+      <SessionProvider session={session}>
+        <Component {...restPageProps} />
+      </SessionProvider>
+    </div>
   )
 }
 
