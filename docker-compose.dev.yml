@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # =================================
-  # � BACKEND API
+  # 🐍 BACKEND API
   # =================================
   backend:
     build:
@@ -13,7 +13,6 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - /app/__pycache__
     environment:
       - ENVIRONMENT=development
       - REDIS_HOST=redis
@@ -23,11 +22,12 @@ services:
       - POSTGRES_DB=culinary_crafts
       - POSTGRES_USER=culinary_user
       - POSTGRES_PASSWORD=dev_password_123
+      - SECRET_KEY=your-secret-key-change-in-production
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=${GEMINI_API_KEY}
     depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
+      - postgres
+      - redis
     restart: unless-stopped
     networks:
       - culinary-network
@@ -44,7 +44,11 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=super-secret-key-change-in-production-12345678901234567890
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
       - BACKEND_URL=http://culinary-backend:8000
     depends_on:
       - backend
@@ -53,176 +57,59 @@ services:
       - culinary-network
 
   # =================================
-  # �🔴 REDIS CACHE
+  # 🔴 REDIS CACHE
   # =================================
   redis:
-    image: redis:7.2-alpine
+    image: redis:latest
     container_name: culinary-redis
+    command: redis-server --requirepass dev_password_123
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    environment:
-      - REDIS_PASSWORD=dev_password_123
-    command: redis-server --requirepass dev_password_123
-    healthcheck:
-      test: ["CMD", "redis-cli", "auth", "dev_password_123", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
     restart: unless-stopped
     networks:
       - culinary-network
 
   # =================================
-  # 📊 MONITORING - PROMETHEUS
-  # =================================  
-  prometheus:
-    image: prom/prometheus:v2.40.0
-    container_name: culinary-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
-    restart: unless-stopped
-    networks:
-      - culinary-network
-
-  # =================================
-  # 📈 MONITORING - GRAFANA
-  # =================================
-  grafana:
-    image: grafana/grafana:9.3.0
-    container_name: culinary-grafana
-    ports:
-      - "3001:3000"  # Port 3000 is used by Next.js
-    networks:
-      - culinary-network
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_INSTALL_PLUGINS=
-    depends_on:
-      - prometheus
-    restart: unless-stopped
-
-  # =================================
-  # 🔍 ELASTICSEARCH (Optional - for advanced logging)
-  # =================================
-  # elasticsearch:
-  #   image: elasticsearch:8.5.0
-  #   container_name: culinary-elasticsearch  
-  #   environment:
-  #     - node.name=culinary-es-node
-  #     - cluster.name=culinary-cluster
-  #     - discovery.type=single-node
-  #     - bootstrap.memory_lock=true
-  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-  #     - xpack.security.enabled=false
-  #   ulimits:
-  #     memlock:
-  #       soft: -1
-  #       hard: -1
-  #   volumes:
-  #     - elasticsearch_data:/usr/share/elasticsearch/data
-  #   ports:
-  #     - "9200:9200"
-  #     - "9300:9300"
-  #   restart: unless-stopped
-
-  # =================================
-  # 📋 KIBANA (Optional - for log visualization)  
-  # =================================
-  # kibana:
-  #   image: kibana:8.5.0
-  #   container_name: culinary-kibana
-  #   environment:
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #   ports:
-  #     - "5601:5601"
-  #   depends_on:
-  #     - elasticsearch
-  #   restart: unless-stopped
-
-  # =================================
-  # 🗄️ POSTGRESQL (Optional - for local testing)
+  # 🗄️ POSTGRESQL
   # =================================
   postgres:
-    image: postgres:15.2-alpine
+    image: postgres:15-alpine
     container_name: culinary-postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
-      - POSTGRES_DB=culinary_crafts
-      - POSTGRES_USER=culinary_user
-      - POSTGRES_PASSWORD=dev_password_123
-      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U culinary_user -d culinary_crafts"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      POSTGRES_DB: culinary_crafts
+      POSTGRES_USER: culinary_user
+      POSTGRES_PASSWORD: dev_password_123
     restart: unless-stopped
+    networks:
+      - culinary-network
 
   # =================================
-  # 📧 MAILHOG (for email testing)
+  # 🛠️ PGADMIN 4
   # =================================
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    container_name: culinary-mailhog
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: culinary-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
     ports:
-      - "1025:1025"  # SMTP server
-      - "8025:8025"  # Web UI
-    restart: unless-stopped
-
-  # =================================
-  # 🔧 NGINX (Reverse Proxy for local development)
-  # =================================
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: culinary-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./infrastructure/nginx/nginx.dev.conf:/etc/nginx/nginx.conf
-      - ./infrastructure/nginx/ssl:/etc/nginx/ssl
+      - "5050:80"
     depends_on:
-      - redis
+      - postgres
     restart: unless-stopped
+    networks:
+      - culinary-network
 
-# =================================
-# 🌐 NETWORKS
-# =================================
 networks:
   culinary-network:
     driver: bridge
 
-# =================================
-# 💾 PERSISTENT VOLUMES
-# =================================
 volumes:
-  redis_data:
-    driver: local
-  prometheus_data:
-    driver: local  
-  grafana_data:
-    driver: local
   postgres_data:
-    driver: local
-  # elasticsearch_data:
-  #   driver: local
+  redis_data:

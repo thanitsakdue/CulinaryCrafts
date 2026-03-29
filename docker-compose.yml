@@ -22,6 +22,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - SECRET_KEY=${SECRET_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GOOGLE_API_KEY=${GEMINI_API_KEY}
     depends_on:
       redis:
         condition: service_healthy
@@ -43,7 +44,11 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${FRONTEND_API_URL:-http://localhost:3000/api}
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=super-secret-key-change-in-production-12345678901234567890
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - NEXT_PUBLIC_API_URL=${FRONTEND_API_URL:-http://localhost:8000/api/v1}
       - BACKEND_URL=http://culinary-backend:8000
     depends_on:
       - backend
@@ -96,13 +101,31 @@ services:
     networks:
       - culinary-network
 
-# =================================
-# 💾 PERSISTENT VOLUMES
-# =================================
+  # =================================
+  # 🗄️ PGADMIN 4 (PostgreSQL GUI - Optional)
+  # =================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: culinary-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@culinary.com
+      - PGADMIN_DEFAULT_PASSWORD=admin123
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - culinary-network
 volumes:
   redis_data:
     driver: local
   postgres_data:
+    driver: local
+  pgadmin_data:
     driver: local
 
 # =================================
