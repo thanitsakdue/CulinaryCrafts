@@ -3,15 +3,26 @@
 Configuration management using Pydantic Settings
 """
 
-from pydantic_settings import BaseSettings
-from pydantic import Field
-from typing import List, Optional
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator
+from typing import List, Optional, Any
 from functools import lru_cache
 import os
 from pathlib import Path
+import json
 
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        # Treat empty env vars as "not set" (prevents JSON parsing errors for list fields).
+        env_ignore_empty=True,
+        # For list-like fields, allow comma-separated env vars (Pydantic Settings v2).
+        env_parse_delimiter=",",
+    )
     
     # =================================
     # 🔐 SECURITY CONFIGURATION
@@ -96,20 +107,38 @@ class Settings(BaseSettings):
         default=["127.0.0.1"],
         description="Trusted Proxy IPs"
     )
-    
-    class Config:
-        """Pydantic configuration."""
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
-        
-        # Environment variable parsing
-        @classmethod
-        def parse_env_var(cls, field_name: str, raw_val: str) -> any:
-            """Parse environment variables."""
-            if field_name in ['CORS_ORIGINS', 'ALLOWED_HOSTS', 'TRUSTED_PROXIES']:
-                return raw_val.split(',') if raw_val else []
-            return raw_val
+
+    @field_validator("CORS_ORIGINS", "ALLOWED_HOSTS", "TRUSTED_PROXIES", mode="before")
+    @classmethod
+    def _parse_list_env(cls, value: Any):
+        """Accept JSON array, CSV string, '*', list/tuple; tolerate empty."""
+        if value is None:
+            return []
+
+        if isinstance(value, str):
+            raw = value.strip()
+            if raw == "":
+                return []
+            if raw == "*":
+                return ["*"]
+
+            # JSON array form: ["http://...", "http://..."]
+            if raw.startswith("[") and raw.endswith("]"):
+                try:
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except Exception:
+                    # Fall back to CSV parsing below
+                    pass
+
+            # CSV form: a,b,c
+            return [part.strip() for part in raw.split(",") if part.strip()]
+
+        if isinstance(value, (list, tuple, set)):
+            return [str(item).strip() for item in value if str(item).strip()]
+
+        return value
     
     def is_production(self) -> bool:
         """Check if running in production environment."""
@@ -145,6 +174,15 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """Get cached application settings."""
+    # Some shells / scripts may export list-like env vars as empty strings.
+    # pydantic-settings treats list fields as "complex" and attempts JSON parsing,
+    # which crashes on an empty string. If the value is empty, treat it as "unset"
+    # so defaults apply.
+    for key in ("CORS_ORIGINS", "ALLOWED_HOSTS", "TRUSTED_PROXIES"):
+        current = os.environ.get(key, None)
+        if current is not None and current.strip() == "":
+            os.environ.pop(key, None)
+
     settings = Settings()
     
     # Validate configuration in production
@@ -153,5 +191,5 @@ def get_settings() -> Settings:
     
     return settings
 
-# Export settings instance
-settings = get_settings()
+# NOTE: Do not instantiate settings at import-time.
+# Import-time evaluation can crash the whole app if any environment variable is malformed.

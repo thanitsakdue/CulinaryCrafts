@@ -8,44 +8,32 @@ from fastapi.responses import PlainTextResponse
 from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
-import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 
-# Import Pydantic models
 try:
-    from app.models import (
-        APIInfo, HealthResponse, ChatRequest, ChatResponse, 
-        RecipeSearchResponse, Recipe, UserProfile, UserPreferences,
-        RecipeSearchQuery, DietaryType, CookingDifficulty, CuisineType,
-        ErrorResponse
-    )
-except ImportError:
-    # Fallbacks for development
-    from pydantic import BaseModel
-    
-    class APIInfo(BaseModel):
-        message: str
-        description: str  
-        version: str
-        endpoints: Dict[str, str]
-    
-    class HealthResponse(BaseModel):
-        status: str
-        service: str
-        version: str
-    
-    class ChatRequest(BaseModel):
-        message: str
-        user_id: Optional[str] = None
-    
-    class ChatResponse(BaseModel):
-        message: str
-        input: dict
-        response: str
-        conversation_id: str
-        suggestions: Optional[List[str]] = []
-        state: Optional[Dict[str, Any]] = {}
+    import google.generativeai as genai  # type: ignore
+except ImportError:  # Optional dependency for basic/minimal installs
+    genai = None
+
+# Import Pydantic models.
+# If these imports fail, let the ImportError bubble up — `app/main.py` already
+# handles that case by falling back to a minimal router.
+from app.models import (
+    APIInfo,
+    HealthResponse,
+    ChatRequest,
+    ChatResponse,
+    RecipeSearchResponse,
+    Recipe,
+    UserProfile,
+    UserPreferences,
+    RecipeSearchQuery,
+    DietaryType,
+    CookingDifficulty,
+    CuisineType,
+    ErrorResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,9 +58,15 @@ router = APIRouter(
 # =================================
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise ValueError("❌ ไม่พบ GEMINI_API_KEY ในไฟล์ .env")
-genai.configure(api_key=api_key)
+GENAI_ENABLED = False
+if genai and api_key:
+    try:
+        genai.configure(api_key=api_key)
+        GENAI_ENABLED = True
+    except Exception as e:
+        logger.warning(f"Gemini is disabled (configure failed): {e}")
+else:
+    logger.warning("Gemini is disabled (missing google-generativeai or GEMINI_API_KEY).")
 
 @router.get(
     "/",
@@ -136,31 +130,33 @@ async def api_health() -> HealthResponse:
     return HealthResponse(
         status="healthy",
         service="culinary-crafts-api",
-        version="1.0.0",
-        timestamp=datetime.utcnow(),
-        uptime="Service running normally"
+        version="1.0.0"
     )
 
 # =================================
 # 🤖 AI ASSISTANT ENDPOINTS
 # =================================
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
-def get_available_model():
-    try:
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                logger.info(f"✅ Found working model: {m.name}")
-                if 'gemini-1.5-flash' in m.name:
-                    return m.name
-        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        return models[0] if models else "gemini-pro"
-    except Exception as e:
-        logger.error(f"❌ Error listing models: {e}")
-        return "gemini-1.5-flash"
+model = None
+working_model_name = None
 
-working_model_name = get_available_model()
-logger.info(f"🚀 Using model: {working_model_name}")
-model = genai.GenerativeModel(working_model_name)
+if GENAI_ENABLED and genai is not None:
+    _genai = genai
+    def get_available_model():
+        try:
+            for m in _genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    logger.info(f"✅ Found working model: {m.name}")
+                    if 'gemini-1.5-flash' in m.name:
+                        return m.name
+            models = [m.name for m in _genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            return models[0] if models else "gemini-pro"
+        except Exception as e:
+            logger.error(f"❌ Error listing models: {e}")
+            return "gemini-1.5-flash"
+
+    working_model_name = get_available_model()
+    logger.info(f"🚀 Using model: {working_model_name}")
+    model = genai.GenerativeModel(working_model_name)
 @router.post(
     "/chat",
     response_model=ChatResponse,
@@ -185,10 +181,15 @@ model = genai.GenerativeModel(working_model_name)
         }
     }
 )
-
-@router.post("/chat", response_model=ChatResponse)
 async def chat_with_assistant(request: ChatRequest):
+    if not GENAI_ENABLED or model is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Gemini AI is not configured. Install google-generativeai and set GEMINI_API_KEY to enable /chat.",
+        )
+
     user_query = request.message
+    conversation_id = request.conversation_id or f"conv_{int(datetime.utcnow().timestamp())}"
     
     try:
         extract_prompt = f"จากประโยค: '{user_query}' ช่วยสกัดชื่อวัตถุดิบหรือชื่ออาหารออกมาเป็นคำสั้นๆ แค่คำเดียวหรือสองคำ เช่น 'ไก่', 'หมู', 'ไข่ดาว' (ตอบแค่คำนั้นไม่ต้องมีคำบรรยาย)"
@@ -199,9 +200,8 @@ async def chat_with_assistant(request: ChatRequest):
         if not found_recipes:
             return ChatResponse(
                 response=f"ขออภัยครับ เชฟหาเมนูที่เกี่ยวกับ '{extracted_keywords}' ใน Cookbook ไม่เจอเลย ลองเปลี่ยนวัตถุดิบดูไหมครับ?",
-                input={"message": user_query},
-                conversation_id="none",
-                message="Not Found"
+                conversation_id=conversation_id,
+                suggestions=[]
             )
 
         context = "\n---\n".join([f"เมนู: {r['name']}\nรายละเอียด: {r['ingredients']}" for r in found_recipes])
@@ -218,24 +218,20 @@ async def chat_with_assistant(request: ChatRequest):
         คำแนะนำ: ตอบให้ดูเป็นกันเอง สุภาพ และจัดรูปแบบให้อ่านง่าย
         """
 
-        response = model.generate_content(prompt)
-        ai_response = response.text
+        result = model.generate_content(prompt)
+        ai_response = result.text
 
         return ChatResponse(
-            message="Success",
             response=ai_response,
-            input={"message": user_query},
-            conversation_id="test",
-            suggestions=[r['name'] for r in found_recipes] # ส่งชื่อเมนูที่เจอไปเป็นปุ่มกด
+            conversation_id=conversation_id,
+            suggestions=[r['name'] for r in found_recipes]
         )
 
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         return ChatResponse(
-            message="Error",
             response=f"ขออภัยครับ เชฟเกิดข้อผิดพลาด: {str(e)}",
-            input={"message": user_query},
-            conversation_id="error",
+            conversation_id=conversation_id,
             suggestions=[]
         )
 
