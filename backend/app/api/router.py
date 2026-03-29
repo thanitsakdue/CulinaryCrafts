@@ -17,7 +17,10 @@ from app.models import (
         RecipeSearchResponse, Recipe, UserProfile, UserPreferences,
         ErrorResponse
 )
-
+from fastapi import Depends  # อย่าลืมเช็กว่ามี import ตัวนี้ด้านบนไหม
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models_db import ChatLog # เช็กชื่อคลาสให้ตรงกับที่สร้างใน models_db.py นะครับ
 
 logger = logging.getLogger(__name__)
 
@@ -159,42 +162,67 @@ model = genai.GenerativeModel(working_model_name) # type: ignore
 )
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_assistant(request: ChatRequest):
+async def chat_with_assistant(
+    request: ChatRequest, 
+    db: Session = Depends(get_db)
+):
     user_query = request.message
+    session_id = request.conversation_id if request.conversation_id else "test"
     
     try:
-        extract_prompt = f"จากประโยค: '{user_query}' ช่วยสกัดชื่อวัตถุดิบหรือชื่ออาหารออกมาเป็นคำสั้นๆ แค่คำเดียวหรือสองคำ เช่น 'ไก่', 'หมู', 'ไข่ดาว' (ตอบแค่คำนั้นไม่ต้องมีคำบรรยาย)"
+        # 1. 🧠 ดึงประวัติการคุย 5 ข้อความล่าสุดจาก Database
+        past_messages = db.query(ChatLog).filter(
+            ChatLog.session_id == session_id
+        ).order_by(ChatLog.created_at.desc()).limit(5).all()
+
+        # เรียงกลับจากเก่าไปใหม่ เพื่อให้ AI อ่านลำดับเหตุการณ์ถูก
+        past_messages.reverse()
+
+        # 2. 📝 สร้าง Memory Context
+        history_context = ""
+        for msg in past_messages:
+            history_context += f"User: {msg.user_query}\nAI: {msg.ai_response}\n"
+
+        # 3. 🍳 ทำ RAG (สกัด Keyword และหา PDF เหมือนเดิม)
+        extract_prompt = f"จากประโยค: '{user_query}' สกัดชื่อวัตถุดิบหรืออาหารสั้นๆ..."
         extracted_keywords = model.generate_content(extract_prompt).text.strip()
-        
-        found_docs = recipe_engine.search(extracted_keywords, limit=3)
-        context = "\n---\n".join([d['content'] for d in found_docs])
-        prompt = f"""
+        found_docs = recipe_engine.search(extracted_keywords, limit=2)
+        doc_context = "\n---\n".join([d['content'] for d in found_docs])
+
+        # 4. 🚀 รวมร่าง Prompt (History + Docs + New Query)
+        final_prompt = f"""
         คุณคือ AI Chef ผู้เชี่ยวชาญ...
-        ข้อมูลจากไฟล์เอกสารของคุณ:
-        {context}
-        คำถามจากผู้ใช้: "{user_query}"
+        
+        นี่คือประวัติการคุยที่ผ่านมาเพื่อใช้เป็นบริบท:
+        {history_context}
+        
+        ข้อมูลเสริมจากตำราอาหาร:
+        {doc_context}
+        
+        คำถามใหม่จากผู้ใช้: "{user_query}"
+        (หากผู้ใช้ถามถึงสิ่งที่เคยคุยไปแล้ว ให้ใช้ประวัติการคุยข้างต้นในการตอบด้วย)
         """
-        response = model.generate_content(prompt)
+
+        # 5. ส่งให้ Gemini
+        response = model.generate_content(final_prompt)
         ai_response = response.text
 
-        return ChatResponse(
-            # ลบบรรทัด message="Success" ออก หรือเปลี่ยนเป็นค่าอื่นที่ Models มี
-            response=ai_response,
-            conversation_id="test",
-            suggestions=[],
-            state={} # เพิ่ม state={} เข้าไปด้วยเพราะใน models.py บังคับ (ไม่มี default)
-        )
+        # 6. บันทึกลง DB (เหมือนเดิม)
+        new_log = ChatLog(session_id=session_id, user_query=user_query, ai_response=ai_response)
+        db.add(new_log)
+        db.commit()
+
+        return ChatResponse(response=ai_response, conversation_id=session_id, suggestions=[], state={})
 
     except Exception as e:
+        db.rollback()
         logger.error(f"Error: {str(e)}")
         return ChatResponse(
-            # ลบบรรทัด message="Error" ออก
             response=f"ขออภัยครับ เชฟเกิดข้อผิดพลาด: {str(e)}",
             conversation_id="error",
             suggestions=[],
-            state={} # เพิ่ม state={} เข้าไปด้วย
+            state={}
         )
-
 # =================================
 # 🔍 RECIPE SEARCH & RETRIEVAL
 # =================================
@@ -364,6 +392,11 @@ async def update_user_preferences(preferences: UserPreferences) -> UserPreferenc
     """
     # TODO: Implement Firestore user preferences update
     return preferences
+
+@router.get("/history/{session_id}")
+async def get_chat_history(session_id: str, db: Session = Depends(get_db)):
+    history = db.query(ChatLog).filter(ChatLog.session_id == session_id).order_by(ChatLog.created_at.asc()).all()
+    return history
 
 # =================================
 # 📊 MONITORING & METRICS
