@@ -1,69 +1,113 @@
+﻿from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+import os
+import logging
+import time
 import logging
 from typing import List, Dict, Any, Optional
-
+import fitz  # PyMuPDF
+from pydantic import SecretStr
+from dotenv import load_dotenv
 logger = logging.getLogger(__name__)
-
-class RecipeEngine:
+load_dotenv()
+class PDFRecipeEngine:
     def __init__(self):
-        self.dataset = None
-        self.recipes = []
-        self.disabled_reason: Optional[str] = None
+        self.vector_store = None
+        # ดึง API Key จาก Environment Variable
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("❌ ไม่พบ GEMINI_API_KEY ใน Environment หรือไฟล์ .env")
+        self.embeddings = GoogleGenerativeAIEmbeddings(
+            model="models/gemini-embedding-001",
+            api_key=SecretStr(api_key) if api_key else None
+        )
 
     def initialize(self):
-        """โหลด Dataset ภาษาไทยเตรียมไว้ใน Memory"""
-        # `datasets` (Hugging Face) is an optional dependency.
-        # Allow the API to start in minimal/basic installs without it.
-        try:
-            try:
-                from datasets import load_dataset  # type: ignore
-            except ModuleNotFoundError as e:
-                self.disabled_reason = (
-                    "Optional dependency 'datasets' is not installed. "
-                    "Install backend/requirements.txt (full) or add 'datasets' to your environment "
-                    "to enable cookbook loading."
-                )
-                logger.warning(self.disabled_reason)
-                logger.debug(f"datasets import error: {e}")
-                self.dataset = None
-                self.recipes = []
+            """โหลดไฟล์ PDF พร้อมระบบ Persistence (ไม่ต้องโหลดซ้ำถ้าเคยเซฟไว้แล้ว)"""
+            import time
+            import os
+            from langchain_community.vectorstores import FAISS
+
+            save_path = "faiss_index"  # ชื่อโฟลเดอร์ที่จะเก็บข้อมูล
+            data_folder = os.path.join(os.getcwd(), "data")
+            
+            # --- [1. ตรวจสอบว่าเคยเซฟไว้หรือยัง] ---
+            if os.path.exists(save_path):
+                logger.info("📖 พบฐานความรู้เดิมในเครื่อง! กำลังโหลด...")
+                try:
+                    self.vector_store = FAISS.load_local(
+                        save_path, 
+                        self.embeddings,
+                        allow_dangerous_deserialization=True
+                    )
+                    logger.info("✅ โหลดสำเร็จ! พร้อมใช้งานทันที (ไม่ต้องรอ 35 วินาที)")
+                    return # จบการทำงานตรงนี้เลย
+                except Exception as e:
+                    logger.error(f"❌ โหลดไฟล์เซฟพลาด: {e} จะเริ่มอ่าน PDF ใหม่แทน")
+
+            # --- [2. ถ้ายังไม่เคยเซฟ (หรือโหลดพลาด) ให้รันระบบเดิม] ---
+            if not os.path.exists(data_folder):
+                logger.error(f"❌ ไม่พบโฟลเดอร์ data ที่: {data_folder}")
                 return
 
-            logger.info("📦 Loading Thai Food Dataset from Hugging Face...")
-            ds = load_dataset("pythainlp/thai_food_v1.0")
-            self.dataset = ds['train']
-            if len(self.dataset) > 0:
-                print(f"DEBUG: หัวข้อที่มีใน Dataset: {self.dataset[0].keys()}")
-            for item in self.dataset:
-                self.recipes.append({
-                    "name": item.get("name", "ไม่ระบุชื่อ"),
-                    "ingredients": item.get("text", "ไม่มีข้อมูลรายละเอียด"), 
-                    "steps": ""
-                })
-            logger.info(f"✅ Loaded {len(self.recipes)} recipes successfully!")
-        except Exception as e:
-            logger.error(f"❌ Failed to load dataset: {e}")
-            self.disabled_reason = str(e)
+            pdf_files = [f for f in os.listdir(data_folder) if f.endswith('.pdf')]
+            if not pdf_files:
+                logger.warning(f"⚠️ ไม่พบไฟล์ PDF ในโฟลเดอร์: {data_folder}")
+                return
 
-    def search(self, query: str, limit: int = 5):
-        if not query:
-            return []
-        keywords = query.replace(',', ' ').split()
-        results_with_scores = []
-        
-        for recipe in self.recipes:
-            text_to_search = f"{recipe.get('name', '')} {recipe.get('ingredients', '')} {recipe.get('description', '')}".lower()
-            match_count = 0
-            for kw in keywords:
-                if kw.lower() in text_to_search:
-                    match_count += 1
-            if match_count > 0:
-                results_with_scores.append({
-                    "recipe": recipe,
-                    "score": match_count
-                })
+            all_chunks = []
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+
+            try:
+                # อ่าน PDF
+                for filename in pdf_files:
+                    pdf_path = os.path.join(data_folder, filename)
+                    logger.info(f"📄 กำลังอ่านไฟล์: {filename}...")
+                    doc = fitz.open(pdf_path)
+                    text = ""
+                    for page in doc:
+                        page_text = page.get_text() # type: ignore
+                        text += page_text
+                    file_chunks = text_splitter.split_text(text)
+                    all_chunks.extend(file_chunks)
+                    logger.info(f"✅ อ่าน {filename} สำเร็จ ({len(file_chunks)} ส่วน)")
+
+                # ทำ Embedding (Batching 30, Sleep 35)
+                if all_chunks:
+                    batch_size = 30
+                    self.vector_store = None
+                    
+                    for i in range(0, len(all_chunks), batch_size):
+                        batch = all_chunks[i:i + batch_size]
+                        logger.info(f"⏳ กำลังประมวลผลส่วนที่ {i+1} ถึง {min(i+batch_size, len(all_chunks))}...")
+                        
+                        if self.vector_store is None:
+                            self.vector_store = FAISS.from_texts(batch, self.embeddings)
+                        else:
+                            self.vector_store.add_texts(batch)
+                        
+                        if i + batch_size < len(all_chunks):
+                            logger.info("😴 พัก 35 วินาที (ป้องกัน Quota Exceeded)...")
+                            time.sleep(35)
+
+                    # --- [3. เมื่อประมวลผลเสร็จ ให้ Save ลงเครื่อง] ---
+                    if self.vector_store:
+                        self.vector_store.save_local("faiss_index")
+                    else:
+                        logger.error("Vector store is not initialized!")
+                    logger.info(f"💾 บันทึกฐานความรู้ลงใน '{save_path}' เรียบร้อย! รอบหน้าจะเปิดได้เร็วขึ้น")
+                    logger.info(f"🚀 เชฟเรียนรู้ข้อมูลเสร็จสิ้น! รวมทั้งหมด {len(all_chunks)} ส่วน")
                 
-        results_with_scores.sort(key=lambda x: x['score'], reverse=True)
-        
-        return [item['recipe'] for item in results_with_scores[:limit]]
+            except Exception as e:
+                logger.error(f"❌ เกิดข้อผิดพลาดระหว่างโหลดไฟล์: {e}")
 
-recipe_engine = RecipeEngine()
+    def search(self, query: str, limit: int = 3):
+        """ค้นหาข้อมูลที่ใกล้เคียงที่สุดจากเนื้อหาใน PDF"""
+        if not self.vector_store or not query:
+            return []
+        
+        docs = self.vector_store.similarity_search(query, k=limit)
+        return [{"content": d.page_content} for d in docs]
+    
+recipe_engine = PDFRecipeEngine()
