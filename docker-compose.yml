@@ -12,10 +12,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - ENVIRONMENT=production
+      - ENVIRONMENT=development
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PASSWORD=123456789
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -30,6 +30,9 @@ services:
     restart: unless-stopped
     networks:
       - default
+    volumes:
+      - ./backend/data:/app/data
+      - ./backend/faiss_index:/app/faiss_index
 
   # =================================
   # ⚛️ FRONTEND WEB APP
