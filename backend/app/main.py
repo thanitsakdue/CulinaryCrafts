@@ -16,8 +16,11 @@ from app.api import router as api_router
 from app.middleware.security import SecurityMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.config.settings import get_settings
-logger = logging.getLogger(__name__)
+from .database import engine
+from . import models_db
 
+logger = logging.getLogger(__name__)
+models_db.Base.metadata.create_all(bind=engine)
 settings = get_settings()
 
 @asynccontextmanager
