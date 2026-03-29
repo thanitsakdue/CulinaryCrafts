@@ -12,46 +12,10 @@ from contextlib import asynccontextmanager
 import logging
 import os
 from typing import List
-
-# Import routers and middleware
-try:
-    from app.api import router as api_router
-    from app.middleware.security import SecurityMiddleware
-    from app.middleware.rate_limit import RateLimitMiddleware
-    from app.config.settings import get_settings
-except ImportError as e:
-    # Handle missing imports gracefully during development
-    print(f"Warning: Some imports failed: {e}")
-    print("This is normal if you haven't installed all dependencies yet.")
-    
-    # Create basic fallbacks
-    from fastapi import APIRouter
-    api_router = APIRouter()
-    
-    @api_router.get("/")
-    async def basic_root():
-        return {"message": "Basic setup - please install full requirements"}
-    
-    class SecurityMiddleware:
-        def __init__(self, app): pass
-    
-    class RateLimitMiddleware:  
-        def __init__(self, app): pass
-        
-    class MockSettings:
-        ENVIRONMENT = "development"
-        DEBUG = True
-        API_VERSION = "v1"
-        CORS_ORIGINS = ["http://localhost:3000"]
-        ALLOWED_HOSTS = []
-    
-    def get_settings():
-        return MockSettings()
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+from app.api import router as api_router
+from app.middleware.security import SecurityMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
+from app.config.settings import get_settings
 logger = logging.getLogger(__name__)
 
 settings = get_settings()

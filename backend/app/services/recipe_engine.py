@@ -1,27 +1,26 @@
-<<<<<<< HEAD
-﻿import fitz  # PyMuPDF
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+﻿from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import os
 import logging
 import time
-=======
 import logging
 from typing import List, Dict, Any, Optional
-
->>>>>>> origin/master
+import fitz  # PyMuPDF
+from pydantic import SecretStr
+from dotenv import load_dotenv
 logger = logging.getLogger(__name__)
-
+load_dotenv()
 class PDFRecipeEngine:
     def __init__(self):
-<<<<<<< HEAD
         self.vector_store = None
         # ดึง API Key จาก Environment Variable
         api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("❌ ไม่พบ GEMINI_API_KEY ใน Environment หรือไฟล์ .env")
         self.embeddings = GoogleGenerativeAIEmbeddings(
             model="models/gemini-embedding-001",
-            google_api_key=api_key
+            api_key=SecretStr(api_key) if api_key else None
         )
 
     def initialize(self):
@@ -29,46 +28,6 @@ class PDFRecipeEngine:
             import time
             import os
             from langchain_community.vectorstores import FAISS
-=======
-        self.dataset = None
-        self.recipes = []
-        self.disabled_reason: Optional[str] = None
-
-    def initialize(self):
-        """โหลด Dataset ภาษาไทยเตรียมไว้ใน Memory"""
-        # `datasets` (Hugging Face) is an optional dependency.
-        # Allow the API to start in minimal/basic installs without it.
-        try:
-            try:
-                from datasets import load_dataset  # type: ignore
-            except ModuleNotFoundError as e:
-                self.disabled_reason = (
-                    "Optional dependency 'datasets' is not installed. "
-                    "Install backend/requirements.txt (full) or add 'datasets' to your environment "
-                    "to enable cookbook loading."
-                )
-                logger.warning(self.disabled_reason)
-                logger.debug(f"datasets import error: {e}")
-                self.dataset = None
-                self.recipes = []
-                return
-
-            logger.info("📦 Loading Thai Food Dataset from Hugging Face...")
-            ds = load_dataset("pythainlp/thai_food_v1.0")
-            self.dataset = ds['train']
-            if len(self.dataset) > 0:
-                print(f"DEBUG: หัวข้อที่มีใน Dataset: {self.dataset[0].keys()}")
-            for item in self.dataset:
-                self.recipes.append({
-                    "name": item.get("name", "ไม่ระบุชื่อ"),
-                    "ingredients": item.get("text", "ไม่มีข้อมูลรายละเอียด"), 
-                    "steps": ""
-                })
-            logger.info(f"✅ Loaded {len(self.recipes)} recipes successfully!")
-        except Exception as e:
-            logger.error(f"❌ Failed to load dataset: {e}")
-            self.disabled_reason = str(e)
->>>>>>> origin/master
 
             save_path = "faiss_index"  # ชื่อโฟลเดอร์ที่จะเก็บข้อมูล
             data_folder = os.path.join(os.getcwd(), "data")
@@ -106,7 +65,10 @@ class PDFRecipeEngine:
                     pdf_path = os.path.join(data_folder, filename)
                     logger.info(f"📄 กำลังอ่านไฟล์: {filename}...")
                     doc = fitz.open(pdf_path)
-                    text = "".join([page.get_text() for page in doc])
+                    text = ""
+                    for page in doc:
+                        page_text = page.get_text() # type: ignore
+                        text += page_text
                     file_chunks = text_splitter.split_text(text)
                     all_chunks.extend(file_chunks)
                     logger.info(f"✅ อ่าน {filename} สำเร็จ ({len(file_chunks)} ส่วน)")
@@ -130,7 +92,10 @@ class PDFRecipeEngine:
                             time.sleep(35)
 
                     # --- [3. เมื่อประมวลผลเสร็จ ให้ Save ลงเครื่อง] ---
-                    self.vector_store.save_local(save_path)
+                    if self.vector_store:
+                        self.vector_store.save_local("faiss_index")
+                    else:
+                        logger.error("Vector store is not initialized!")
                     logger.info(f"💾 บันทึกฐานความรู้ลงใน '{save_path}' เรียบร้อย! รอบหน้าจะเปิดได้เร็วขึ้น")
                     logger.info(f"🚀 เชฟเรียนรู้ข้อมูลเสร็จสิ้น! รวมทั้งหมด {len(all_chunks)} ส่วน")
                 
