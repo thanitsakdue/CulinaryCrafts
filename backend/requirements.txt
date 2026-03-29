@@ -17,3 +17,12 @@ httpx==0.25.2
 
 # Development/testing
 python-jose[cryptography]==3.3.0
+
+# =================================
+# 📄 PDF PROCESSING & VECTOR SEARCH (Added for PDF Engine)
+# =================================
+langchain-text-splitters
+pymupdf
+faiss-cpu
+langchain-community
+langchain-google-genai>=1.0.0

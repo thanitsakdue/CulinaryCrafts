@@ -11,7 +11,6 @@ from datetime import datetime
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
-
 # Import Pydantic models
 try:
     from app.models import (
@@ -35,9 +34,14 @@ except ImportError:
         service: str
         version: str
     
+    class ChatMessage(BaseModel):
+        role: str
+        content: str
+
     class ChatRequest(BaseModel):
         message: str
         user_id: Optional[str] = None
+        history: Optional[List[ChatMessage]] = []
     
     class ChatResponse(BaseModel):
         message: str
@@ -194,30 +198,14 @@ async def chat_with_assistant(request: ChatRequest):
         extract_prompt = f"จากประโยค: '{user_query}' ช่วยสกัดชื่อวัตถุดิบหรือชื่ออาหารออกมาเป็นคำสั้นๆ แค่คำเดียวหรือสองคำ เช่น 'ไก่', 'หมู', 'ไข่ดาว' (ตอบแค่คำนั้นไม่ต้องมีคำบรรยาย)"
         extracted_keywords = model.generate_content(extract_prompt).text.strip()
         
-        found_recipes = recipe_engine.search(extracted_keywords, limit=3)
-        
-        if not found_recipes:
-            return ChatResponse(
-                response=f"ขออภัยครับ เชฟหาเมนูที่เกี่ยวกับ '{extracted_keywords}' ใน Cookbook ไม่เจอเลย ลองเปลี่ยนวัตถุดิบดูไหมครับ?",
-                input={"message": user_query},
-                conversation_id="none",
-                message="Not Found"
-            )
-
-        context = "\n---\n".join([f"เมนู: {r['name']}\nรายละเอียด: {r['ingredients']}" for r in found_recipes])
+        found_docs = recipe_engine.search(extracted_keywords, limit=3)
+        context = "\n---\n".join([d['content'] for d in found_docs])
         prompt = f"""
-        คุณคือ AI Chef ผู้เชี่ยวชาญด้านอาหารไทย 
-        หน้าที่ของคุณคือตอบคำถามผู้ใช้โดยใช้ "ข้อมูลสูตรอาหาร" ที่กำหนดให้ด้านล่างนี้เท่านั้น 
-        **ห้ามเมคข้อมูลเอง ห้ามเอาความรู้จากภายนอกมาตอบ**
-        
-        ข้อมูลสูตรอาหารจาก Cookbook:
+        คุณคือ AI Chef ผู้เชี่ยวชาญ...
+        ข้อมูลจากไฟล์เอกสารของคุณ:
         {context}
-        
         คำถามจากผู้ใช้: "{user_query}"
-        
-        คำแนะนำ: ตอบให้ดูเป็นกันเอง สุภาพ และจัดรูปแบบให้อ่านง่าย
         """
-
         response = model.generate_content(prompt)
         ai_response = response.text
 
@@ -226,7 +214,7 @@ async def chat_with_assistant(request: ChatRequest):
             response=ai_response,
             input={"message": user_query},
             conversation_id="test",
-            suggestions=[r['name'] for r in found_recipes] # ส่งชื่อเมนูที่เจอไปเป็นปุ่มกด
+            suggestions=[]
         )
 
     except Exception as e:
