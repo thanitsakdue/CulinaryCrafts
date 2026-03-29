@@ -15,14 +15,10 @@ class Settings(BaseSettings):
     """Application settings with environment variable support."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-        # Treat empty env vars as "not set" (prevents JSON parsing errors for list fields).
-        env_ignore_empty=True,
-        # For list-like fields, allow comma-separated env vars (Pydantic Settings v2).
-        env_parse_delimiter=",",
-    )
+            env_file=".env",
+            extra="ignore",
+            case_sensitive=False
+        )
     
     # =================================
     # 🔐 SECURITY CONFIGURATION
