@@ -114,32 +114,6 @@ services:
     networks:
       - culinary-network
 
-  # =================================
-  # 🗄️ PGADMIN 4 (PostgreSQL GUI - Optional)
-  # =================================
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: culinary-pgadmin
-    ports:
-      - "5050:80"
-    environment:
-      - PGADMIN_DEFAULT_EMAIL=admin@culinary.com
-      - PGADMIN_DEFAULT_PASSWORD=admin123
-      - PGADMIN_CONFIG_SERVER_MODE=False
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - postgres
-    restart: unless-stopped
-    networks:
-      - culinary-network
-volumes:
-  redis_data:
-    driver: local
-  postgres_data:
-    driver: local
-  pgadmin_data:
-    driver: local
 
 # =================================
 # 🌐 NETWORKS (Merged)

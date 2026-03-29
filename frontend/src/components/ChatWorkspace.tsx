@@ -782,8 +782,8 @@ export default function ChatWorkspace({
                 </div>
               </div>
 
-              {/* Input container (centered, big card) */}
-              <div className="w-full px-4 pb-8">
+              {/* Input container (centered, big card) - Sticky */}
+              <div className="sticky bottom-0 w-full px-4 py-4 bg-gradient-to-t from-culinary-deepBrown via-culinary-deepBrown/95 to-culinary-deepBrown/0 z-20">
                 <div className="max-w-3xl mx-auto">
                   <div className="rounded-[28px] border border-culinary-gold/15 bg-culinary-cream/5 backdrop-blur-md shadow-warm p-4 md:p-5">
                     {/* Attachments row */}
@@ -847,19 +847,21 @@ export default function ChatWorkspace({
                     </div>
                   </div>
 
-                  {/* Quick actions */}
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    {suggestionPills.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => void send(s)}
-                        className="px-4 py-2 rounded-full border border-culinary-gold/15 bg-culinary-cream/5 text-culinary-cream/85 hover:bg-culinary-cream/10 transition-colors text-sm"
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
+                  {/* Quick actions - Hidden when typing or sending */}
+                  {!input.trim() && !sending && (
+                    <div className="mt-4 flex flex-wrap justify-center gap-2 animate-in fade-in duration-300">
+                      {suggestionPills.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => void send(s)}
+                          className="px-4 py-2 rounded-full border border-culinary-gold/15 bg-culinary-cream/5 text-culinary-cream/85 hover:bg-culinary-cream/10 transition-colors text-sm"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
