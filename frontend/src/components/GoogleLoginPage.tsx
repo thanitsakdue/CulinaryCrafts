@@ -1,6 +1,35 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Chrome } from 'lucide-react'
+import { ChefHat } from 'lucide-react'
+
+// Inline Google Logo SVG (no external packages needed)
+const GoogleLogo = ({ size = 24 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="12" cy="12" r="11" stroke="currentColor" strokeWidth="0.5" />
+    <path
+      d="M19.6 12.2c0-.82-.1-1.42-.25-2.05H12v3.72h4.3c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"
+      fill="#4285F4"
+    />
+    <path
+      d="M13.46 15.13c-.83.63-1.84 1.24-3.46 1.84v2.85c1.97-1.15 3.47-2.92 4.3-4.69h-1.6m0-8.41H9.9c.58.64 1.29 1.78 1.56 2.45m2.14 0c.27-.67.98-1.81 1.56-2.45"
+      fill="#34A853"
+    />
+    <path
+      d="M12 3.88c2.5 0 4.71 1.09 6.29 2.84l4.15-4.15C17.71 1.27 15.2 0 12 0 7.7 0 3.99 2.16 1.96 5.26l3.91 3.91c1.15-2.05 3.37-3.29 6.13-3.29z"
+      fill="#FBBC05"
+    />
+    <path
+      d="M3.99 12c0-1.3.22-2.65.72-3.88L.1 4.04C-1.35 6.78-2 9.79-2 12c0 2.04.43 4.02 1.22 5.85l3.91-3.91c-.5-1.23-.72-2.58-.72-3.88z"
+      fill="#EA4335"
+    />
+  </svg>
+)
 
 interface GoogleLoginPageProps {
   onLogin?: () => void
@@ -77,11 +106,11 @@ export const GoogleLoginPage: React.FC<GoogleLoginPageProps> = ({
           variants={itemVariants}
         >
           <motion.div
-            className="text-6xl mb-4 inline-block"
+            className="mb-4 inline-block"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            👨‍🍳
+            <ChefHat size={80} className="text-culinary-terracotta" />
           </motion.div>
 
           <h1 className="text-5xl md:text-6xl font-bold gradient-text-warm mb-4">
@@ -114,7 +143,7 @@ export const GoogleLoginPage: React.FC<GoogleLoginPageProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Chrome size={24} />
+            <GoogleLogo size={24} />
             <span>{isLoading ? 'Connecting...' : 'Continue with Google'}</span>
           </motion.button>
 

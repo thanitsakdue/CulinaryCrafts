@@ -4,13 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Menu,
   Plus,
-  Sparkles,
-  MessageSquare,
+  Wand2,
+  UtensilsCrossed,
+  MessageCircle,
   Settings,
   HelpCircle,
   Maximize2,
   Minimize2,
   LogOut,
+  ChefHat,
 } from 'lucide-react'
 import ImageAttachment from './ImageAttachment'
 import { apiClient } from '../services/apiClient'
@@ -42,9 +44,150 @@ type Gem = {
 
 const STORAGE_KEY = 'culinarycrafts.conversations.v1'
 
+// Format AI messages with beautiful card-based rendering
+function FormattedMessage({ text }: { text: string }) {
+  // Parse sections: look for section markers like "###" or "**Section:**"
+  const sections: { type: string; title?: string; content: string[] }[] = []
+  const lines = text.split('\n')
+
+  let currentSection: { type: string; title?: string; content: string[] } | null = null
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+
+    // Skip empty lines
+    if (!trimmed) {
+      if (currentSection && currentSection.content.length > 0) {
+        currentSection.content.push('')
+      }
+      continue
+    }
+
+    // H2 headers (##) - main sections
+    if (trimmed.match(/^##\s+/)) {
+      if (currentSection) sections.push(currentSection)
+      const title = trimmed.replace(/^##\s+/, '').replace(/\*\*/g, '')
+      currentSection = { type: 'h2', title, content: [] }
+      continue
+    }
+
+    // H3 headers (###) - subsections
+    if (trimmed.match(/^###\s+/)) {
+      if (currentSection) sections.push(currentSection)
+      const title = trimmed.replace(/^###\s+/, '').replace(/\*\*/g, '')
+      currentSection = { type: 'h3', title, content: [] }
+      continue
+    }
+
+    // H1 headers (#) - recipe title
+    if (trimmed.match(/^#\s+/)) {
+      if (currentSection) sections.push(currentSection)
+      const title = trimmed.replace(/^#\s+/, '').replace(/\*\*(.+?)\*\*/g, '$1')
+      currentSection = { type: 'h1', title, content: [] }
+      continue
+    }
+
+    if (!currentSection) {
+      currentSection = { type: 'paragraph', content: [trimmed] }
+    } else {
+      currentSection.content.push(trimmed)
+    }
+  }
+
+  if (currentSection) sections.push(currentSection)
+
+  const renderContent = (items: string[]) => {
+    return items.map((item, idx) => {
+      if (!item.trim()) return null
+
+      // Bold text
+      if (item.match(/^\*\*(.+?)\*\*$/)) {
+        return (
+          <div key={idx} className="font-semibold text-culinary-deepBrown">
+            {item.replace(/\*\*/g, '')}
+          </div>
+        )
+      }
+
+      // Unordered list
+      if (item.match(/^[\*\-\+]\s/)) {
+        return (
+          <li key={idx} className="ml-4 list-disc text-culinary-deepBrown">
+            {item.replace(/^[\*\-\+]\s/, '').replace(/\*\*(.+?)\*\*/g, (_, g1) => g1)}
+          </li>
+        )
+      }
+
+      // Ordered list
+      if (item.match(/^\d+\.\s/)) {
+        return (
+          <li key={idx} className="ml-4 list-decimal text-culinary-deepBrown">
+            {item.replace(/^\d+\.\s/, '').replace(/\*\*(.+?)\*\*/g, (_, g1) => g1)}
+          </li>
+        )
+      }
+
+      // Regular text with formatting
+      return (
+        <p key={idx} className="text-culinary-deepBrown/90 leading-relaxed">
+          {item.split(/(\*\*.*?\*\*)/gm).map((segment, i) => {
+            if (segment.match(/^\*\*.*\*\*$/)) {
+              return (
+                <strong key={i} className="font-semibold text-culinary-deepBrown">
+                  {segment.replace(/\*\*/g, '')}
+                </strong>
+              )
+            }
+            return segment
+          })}
+        </p>
+      )
+    })
+  }
+
+  return (
+    <div className="space-y-3">
+      {sections.map((section, idx) => {
+        // Recipe title (H1)
+        if (section.type === 'h1') {
+          return (
+            <div key={idx} className="bg-gradient-to-r from-culinary-terracotta/20 to-culinary-coral/20 rounded-2xl p-4 border border-culinary-terracotta/30">
+              <h1 className="text-xl font-bold text-culinary-deepBrown">{section.title}</h1>
+            </div>
+          )
+        }
+
+        // Section headers (H2, H3)
+        if (section.type === 'h2' || section.type === 'h3') {
+          const isH2 = section.type === 'h2'
+          return (
+            <div key={idx} className="">
+              <div className={isH2 ? 'font-bold text-lg' : 'font-semibold text-base'}>
+                <span className="text-culinary-terracotta">{isH2 ? '▪ ' : '◦ '}</span>
+                <span className="text-culinary-deepBrown">{section.title}</span>
+              </div>
+              {section.content.length > 0 && (
+                <div className="mt-2 space-y-2 ml-2">
+                  {renderContent(section.content)}
+                </div>
+              )}
+            </div>
+          )
+        }
+
+        // Regular paragraphs
+        return (
+          <div key={idx} className="space-y-2">
+            {renderContent(section.content)}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 const GEMS: Gem[] = [
   { id: 'classic', name: 'Classic Chef', description: 'Balanced cooking help' },
-  { id: 'mealprep', name: 'Meal Prep Pro', description: 'Plans & portions' },
   { id: 'baker', name: 'Pastry Mentor', description: 'Baking & ratios' },
 ]
 
@@ -288,63 +431,61 @@ export default function ChatWorkspace({
           )}
         </AnimatePresence>
 
-        {/* Sidebar */}
+        {/* Sidebar - Fixed Position on Desktop */}
         {!sidebarHidden && (
           <aside
             className={
-              "z-50 flex flex-col border-r border-culinary-gold/10 bg-culinary-deepBrown/95 backdrop-blur-md " +
-              (sidebarCollapsed ? 'w-16' : 'w-80') +
-              " max-md:fixed max-md:top-0 max-md:left-0 max-md:h-screen max-md:shadow-warm " +
+              "flex flex-col border-r border-culinary-gold/10 bg-culinary-deepBrown/95 backdrop-blur-md transition-all duration-300 " +
+              (sidebarCollapsed ? 'w-20' : 'w-72') +
+              " md:fixed md:top-0 md:left-0 md:h-screen md:z-40 " +
+              " max-md:fixed max-md:top-0 max-md:left-0 max-md:h-screen max-md:w-72 max-md:z-50 max-md:shadow-warm " +
               (sidebarOpenMobile ? 'max-md:translate-x-0' : 'max-md:-translate-x-full') +
               ' max-md:transition-transform'
             }
           >
             {/* Header */}
-            <div className="flex items-center gap-2 p-3">
+            <div className={sidebarCollapsed ? 'p-2 flex flex-col gap-2 items-center border-b border-culinary-gold/10' : 'flex items-center gap-2 p-3 border-b border-culinary-gold/10'}>
               <button
                 type="button"
-                className="h-10 w-10 rounded-xl bg-culinary-cream/10 text-culinary-cream hover:bg-culinary-cream/15 transition-colors flex items-center justify-center"
+                className="h-11 w-11 rounded-lg bg-culinary-cream/10 text-culinary-cream hover:bg-culinary-cream/20 active:bg-culinary-cream/25 transition-colors flex items-center justify-center flex-shrink-0"
                 onClick={() => setSidebarCollapsed((v) => !v)}
                 aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               >
-                <Menu size={18} />
+                <Menu size={20} />
               </button>
 
               {!sidebarCollapsed && (
                 <button
                   type="button"
-                  className="flex-1 h-10 rounded-xl bg-gradient-to-br from-culinary-terracotta to-culinary-coral text-white font-semibold flex items-center justify-center gap-2 hover:shadow-warm transition-shadow"
+                  className="flex-1 h-11 rounded-lg bg-gradient-to-br from-culinary-terracotta to-culinary-coral text-white font-semibold flex items-center justify-center gap-2 hover:shadow-warm active:scale-95 transition-all"
                   onClick={handleNewChat}
                 >
-                  <Plus size={18} />
-                  New Chat
+                  <Plus size={20} />
+                  New
                 </button>
               )}
 
               {sidebarCollapsed && (
                 <button
                   type="button"
-                  className="h-10 w-10 rounded-xl bg-gradient-to-br from-culinary-terracotta to-culinary-coral text-white font-semibold flex items-center justify-center hover:shadow-warm"
+                  className="h-11 w-11 rounded-lg bg-gradient-to-br from-culinary-terracotta to-culinary-coral text-white font-semibold flex items-center justify-center hover:shadow-warm active:scale-95 transition-all flex-shrink-0"
                   onClick={handleNewChat}
                   aria-label="New chat"
                 >
-                  <Plus size={18} />
+                  <Plus size={20} />
                 </button>
               )}
             </div>
 
             {/* Gems */}
-            <div className="px-3 pt-2">
+            <div className={sidebarCollapsed ? 'px-2 pt-3 flex flex-col gap-2' : 'px-3 pt-4'}>
               {!sidebarCollapsed && (
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-xs uppercase tracking-wider text-culinary-cream/60">
-                    Gems
-                  </div>
-                  <div className="text-xs text-culinary-cream/40">Personas</div>
+                <div className="text-xs uppercase tracking-wider text-culinary-cream/60 mb-3 px-1">
+                  Personas
                 </div>
               )}
 
-              <div className="space-y-2">
+              <div className={sidebarCollapsed ? 'space-y-2 flex flex-col items-center' : 'space-y-2'}>
                 {GEMS.map((g) => {
                   const active = g.id === activeGemId
                   return (
@@ -353,25 +494,34 @@ export default function ChatWorkspace({
                       type="button"
                       onClick={() => handleGemSelect(g.id)}
                       className={
-                        "w-full rounded-2xl border transition-colors text-left " +
-                        (sidebarCollapsed ? 'p-2' : 'p-3') +
+                        "rounded-lg border transition-all text-left " +
+                        (sidebarCollapsed 
+                          ? 'p-3 w-12 h-12 flex items-center justify-center'
+                          : 'w-full rounded-xl border transition-colors p-3') +
                         ' ' +
                         (active
                           ? 'border-culinary-terracotta/40 bg-culinary-cream/10'
                           : 'border-culinary-gold/10 bg-culinary-cream/5 hover:bg-culinary-cream/10')
                       }
-                      aria-label={`Select gem ${g.name}`}
+                      aria-label={`Select ${g.name}`}
+                      title={sidebarCollapsed ? g.name : ''}
                     >
-                      <div className="flex items-center gap-2">
+                      <div className={sidebarCollapsed ? '' : 'flex items-center gap-3'}>
                         <div
                           className={
-                            "h-9 w-9 rounded-xl flex items-center justify-center " +
+                            "rounded-lg flex items-center justify-center flex-shrink-0 " +
+                            (sidebarCollapsed ? 'h-8 w-8' : 'h-10 w-10') +
+                            ' ' +
                             (active
                               ? 'bg-culinary-terracotta/20 text-culinary-honey'
                               : 'bg-culinary-cream/10 text-culinary-cream')
                           }
                         >
-                          <Sparkles size={18} />
+                          {g.id === 'classic' ? (
+                            <ChefHat size={18} />
+                          ) : (
+                            <UtensilsCrossed size={18} />
+                          )}
                         </div>
                         {!sidebarCollapsed && (
                           <div className="min-w-0">
@@ -391,13 +541,13 @@ export default function ChatWorkspace({
             </div>
 
             {/* History */}
-            <div className="px-3 pt-4 flex-1 min-h-0">
+            <div className={sidebarCollapsed ? 'px-2 pt-3 flex-1 min-h-0 flex flex-col items-center' : 'px-3 pt-4 flex-1 min-h-0'}>
               {!sidebarCollapsed && (
-                <div className="text-xs uppercase tracking-wider text-culinary-cream/60 mb-2">
-                  Chats
+                <div className="text-xs uppercase tracking-wider text-culinary-cream/60 mb-3 px-1">
+                  Conversations
                 </div>
               )}
-              <div className="space-y-2 overflow-y-auto min-h-0 pr-1">
+              <div className={sidebarCollapsed ? 'space-y-2 w-full flex flex-col items-center' : 'space-y-2 overflow-y-auto min-h-0 w-full pr-1'}>
                 {conversations.map((c) => {
                   const active = c.id === activeConversationId
                   return (
@@ -406,16 +556,23 @@ export default function ChatWorkspace({
                       type="button"
                       onClick={() => setActiveConversation(c.id)}
                       className={
-                        "w-full rounded-2xl border px-3 py-2 transition-colors text-left " +
+                        "rounded-lg border px-3 py-2 transition-all text-left " +
+                        (sidebarCollapsed
+                          ? 'w-12 h-12 p-0 flex items-center justify-center'
+                          : 'w-full rounded-xl') +
+                        ' ' +
                         (active
                           ? 'border-culinary-terracotta/40 bg-culinary-cream/10'
                           : 'border-culinary-gold/10 bg-culinary-cream/5 hover:bg-culinary-cream/10')
                       }
                       aria-label={`Open conversation ${c.title}`}
+                      title={sidebarCollapsed ? c.title : ''}
                     >
-                      <div className="flex items-center gap-2">
-                        <MessageSquare size={16} className="text-culinary-cream/70" />
-                        {!sidebarCollapsed && (
+                      {sidebarCollapsed ? (
+                        <MessageCircle size={18} className="text-culinary-cream/70" />
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <MessageCircle size={16} className="text-culinary-cream/70 flex-shrink-0" />
                           <div className="min-w-0">
                             <div className="text-sm font-medium text-culinary-cream truncate">
                               {c.title}
@@ -424,8 +581,8 @@ export default function ChatWorkspace({
                               {new Date(c.updatedAt).toLocaleString()}
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </button>
                   )
                 })}
@@ -433,39 +590,39 @@ export default function ChatWorkspace({
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-culinary-gold/10">
-              <div className={sidebarCollapsed ? 'space-y-2' : 'space-y-2'}>
-                <a
-                  href="#"
-                  className={
-                    "flex items-center gap-2 rounded-xl border border-culinary-gold/10 bg-culinary-cream/5 hover:bg-culinary-cream/10 transition-colors " +
-                    (sidebarCollapsed ? 'p-2 justify-center' : 'p-3')
-                  }
-                >
-                  <Settings size={16} className="text-culinary-cream/70" />
-                  {!sidebarCollapsed && (
-                    <span className="text-sm text-culinary-cream/80">Settings & Help</span>
-                  )}
-                </a>
-                <a
-                  href="#"
-                  className={
-                    "flex items-center gap-2 rounded-xl border border-culinary-gold/10 bg-culinary-cream/5 hover:bg-culinary-cream/10 transition-colors " +
-                    (sidebarCollapsed ? 'p-2 justify-center' : 'p-3')
-                  }
-                >
-                  <HelpCircle size={16} className="text-culinary-cream/70" />
-                  {!sidebarCollapsed && (
-                    <span className="text-sm text-culinary-cream/80">Support</span>
-                  )}
-                </a>
-              </div>
+            <div className="p-3 border-t border-culinary-gold/10 flex flex-col items-center gap-2">
+              <Link
+                href="/profile"
+                className={
+                  "flex items-center justify-center gap-2 rounded-lg border border-culinary-gold/10 bg-culinary-cream/5 hover:bg-culinary-cream/10 transition-colors " +
+                  (sidebarCollapsed ? 'p-3 w-12 h-12' : 'w-full p-3')
+                }
+                title={sidebarCollapsed ? 'Preferences' : ''}
+              >
+                <Settings size={18} className="text-culinary-cream/70" />
+                {!sidebarCollapsed && (
+                  <span className="text-sm text-culinary-cream/80">Preferences</span>
+                )}
+              </Link>
+              <a
+                href="#"
+                className={
+                  "flex items-center justify-center gap-2 rounded-lg border border-culinary-gold/10 bg-culinary-cream/5 hover:bg-culinary-cream/10 transition-colors " +
+                  (sidebarCollapsed ? 'p-3 w-12 h-12' : 'w-full p-3')
+                }
+                title={sidebarCollapsed ? 'Support' : ''}
+              >
+                <HelpCircle size={18} className="text-culinary-cream/70" />
+                {!sidebarCollapsed && (
+                  <span className="text-sm text-culinary-cream/80">Support</span>
+                )}
+              </a>
             </div>
           </aside>
         )}
 
         {/* Main */}
-        <main className="flex-1 min-w-0 flex flex-col">
+        <main className={`flex-1 min-w-0 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-72'}`}>
           {/* Top Nav */}
           <div className="h-14 border-b border-culinary-gold/10 bg-culinary-deepBrown/80 backdrop-blur-md sticky top-0 z-30">
             <div className="h-full max-w-6xl mx-auto px-4 flex items-center justify-between">
@@ -491,14 +648,6 @@ export default function ChatWorkspace({
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="h-10 px-3 rounded-xl bg-culinary-cream/10 hover:bg-culinary-cream/15 transition-colors text-xs font-semibold text-culinary-cream/80"
-                  aria-label="Pro"
-                >
-                  PRO
-                </button>
-
                 <button
                   type="button"
                   className="h-10 w-10 rounded-xl bg-culinary-cream/10 hover:bg-culinary-cream/15 transition-colors flex items-center justify-center"
@@ -545,7 +694,9 @@ export default function ChatWorkspace({
                   {/* Hero */}
                   {(!activeConversation || activeConversation.messages.length === 0) && (
                     <div className="text-center pt-10 pb-8">
-                      <div className="text-5xl mb-4">👨‍🍳</div>
+                      <div className="mb-4 flex justify-center">
+                        <ChefHat size={64} className="text-culinary-cream" />
+                      </div>
                       <h1 className="text-4xl md:text-6xl font-bold text-culinary-cream">
                         Hello{userName ? `, ${userName}` : ''}.
                       </h1>
@@ -584,8 +735,12 @@ export default function ChatWorkspace({
                                 className="w-full max-h-60 object-cover rounded-2xl mb-3"
                               />
                             )}
-                            <div className="whitespace-pre-wrap leading-relaxed text-sm md:text-[15px]">
-                              {m.text}
+                            <div className="text-sm md:text-[15px] leading-relaxed">
+                              {isUser ? (
+                                <div className="whitespace-pre-wrap">{m.text}</div>
+                              ) : (
+                                <FormattedMessage text={m.text} />
+                              )}
                             </div>
                             <div
                               className={
