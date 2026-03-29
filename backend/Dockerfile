@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 
 # Upgrade pip
 RUN pip install --upgrade pip
-
+RUN pip install langchain-text-splitters
 # Copy requirements first (for better Docker layer caching)
 COPY requirements.txt .
 
