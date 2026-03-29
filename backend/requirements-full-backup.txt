@@ -1,166 +1,19 @@
 # =================================
-# 🚀 CORE FRAMEWORK
+# 🚀 MINIMAL WORKING REQUIREMENTS
 # =================================
+# Core web framework - these definitely work
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
-# =================================  
-# 🤖 AI & ML LIBRARIES
-# =================================
-# LangChain & LangGraph for Agentic AI
-langchain==0.1.0
-langgraph==0.0.40
-langsmith==0.0.69
-
-# Google AI & Vertex AI
-google-cloud-aiplatform==1.71.0
-google-generativeai==0.4.0
-vertexai==1.71.1
-
-# Vector operations & embeddings
-numpy==1.25.2
-scipy==1.11.4
-
-# =================================
-# 🗄️ DATABASE & STORAGE
-# =================================
-# Google Cloud Services
-google-cloud-firestore==2.13.1
-google-cloud-storage==2.10.0
-google-cloud-secret-manager==2.17.0
-
-# Redis for caching
-redis==5.0.1
-redis-py-cluster==2.1.3
-
-# =================================
-# 🔐 SECURITY & AUTHENTICATION
-# =================================
-# JWT handling
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+# Basic utilities
 python-multipart==0.0.6
-
-# Security utilities
-cryptography==41.0.7
-bcrypt==4.1.2
-
-# =================================
-# 🌐 HTTP & API  
-# =================================
-# HTTP client libraries
-httpx==0.25.2
-aiohttp==3.9.1
-requests==2.31.0
-
-# CORS handling is built into FastAPI - no separate package needed
-
-# =================================
-# 📱 LINE INTEGRATION
-# =================================
-line-bot-sdk==3.5.0
-
-# =================================
-# ⚙️ CONFIGURATION & UTILITIES
-# =================================
-# Environment management
 python-dotenv==1.0.0
-dynaconf==3.2.4
 
-# Date/time handling
-python-dateutil==2.8.2
-pytz==2023.3
+# HTTP clients
+requests==2.31.0
+httpx==0.25.2
 
-# Data validation & serialization
-marshmallow==3.20.2
-jsonschema==4.20.0
-
-# =================================
-# 📊 MONITORING & LOGGING
-# =================================
-# Structured logging
-structlog==23.2.0
-python-json-logger==2.0.7
-
-# Monitoring & metrics
-prometheus-client==0.19.0
-opencensus-ext-azure==1.1.12
-
-# Google Cloud monitoring
-google-cloud-monitoring==2.16.0
-google-cloud-logging==3.8.0
-
-# =================================
-# 🧪 TESTING & DEVELOPMENT
-# =================================  
-# Testing framework
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-pytest-mock==3.12.0
-httpx==0.25.2  # For testing FastAPI
-
-# Code quality
-black==23.11.0
-isort==5.12.0
-flake8==6.1.0
-mypy==1.7.1
-
-# =================================
-# 🏗️ INFRASTRUCTURE
-# =================================
-# Task queue & background jobs
-celery==5.3.4
-kombu==5.3.4
-
-# Database migrations (if needed)
-alembic==1.13.0
-
-# =================================
-# 📈 PERFORMANCE & OPTIMIZATION  
-# =================================
-# Async utilities
-asyncio-throttle==1.0.2
-aiofiles==23.2.1
-
-# Memory optimization
-psutil==5.9.6
-
-# =================================
-# 🔧 UTILITY LIBRARIES
-# =================================
-# String & text processing
-python-slugify==8.0.1
-unidecode==1.3.7
-
-# Image processing (for multimodal input)
-Pillow==10.1.0
-opencv-python==4.8.1.78
-
-# File handling
-python-magic==0.4.27
-
-# =================================
-# 🐳 DEPLOYMENT & PRODUCTION
-# =================================
-# WSGI/ASGI servers
-gunicorn==21.2.0
-
-# Health checks
-py-healthcheck==1.10.1
-
-# Process management
-supervisor==4.2.5
-
-# =================================
-# 📋 DEVELOPMENT DEPENDENCIES
-# =================================
-# Jupyter for notebooks (optional)
-# jupyter==1.0.0
-# notebook==7.0.6
-
-# API documentation
-# mkdocs==1.5.3
-# mkdocs-material==9.0.3
+# Development/testing
+python-jose[cryptography]==3.3.0

@@ -1,22 +1,34 @@
-# =================================
-# 🔐 SECURITY & SECRETS
-# =================================
-.env*
+# ============================================================================
+# 🔐 SECURITY & SECRETS - CRITICAL: Never commit sensitive data
+# ============================================================================
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 !.env.example
 *.pem
 *.key
 *.crt
+*.pfx
 service-account*.json
 credentials.json
 secrets/
+.aws/
+.gcp/
 
-# =================================
-# 🐍 PYTHON
-# =================================
+# ============================================================================
+# 🐍 PYTHON - Backend Dependencies & Build Artifacts
+# ============================================================================
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+.Python
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -36,6 +48,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.whl
 
 # PyInstaller
 *.manifest
@@ -54,9 +67,11 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
 
 # Virtual environments
-.env
 .venv
 env/
 venv/
@@ -64,28 +79,46 @@ ENV/
 env.bak/
 venv.bak/
 
-# =================================
-# 📱 NODE.JS / NEXT.JS
-# =================================
+# Pylint, mypy
+.pylintrc
+.mypy*
+
+# ============================================================================
+# 📱 NODE.JS & NEXT.JS - Frontend Dependencies & Build Artifacts
+# ============================================================================
+# Dependencies
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
 
 # Next.js
-.next/
-out/
-dist/
+/.next/
+/out/
+.next
+.next-build/
+.next-build.bak-*/
+.nextdist/
+.vscode-next-build
+.vercel
 
 # Production builds
-build/
+/build
+/dist
 
-# Dependency directories
-jspm_packages/
+# Npm/Yarn/Pnpm debug logs
+npm-debug.log*
+npm-error.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pnpm-error.log*
 
 # Optional npm cache directory
 .npm
+.eslintcache
 
 # Optional REPL history
 .node_repl_history
@@ -96,47 +129,101 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# =================================
-# 🗄️ DATABASE & CACHE
-# =================================
+# Misc
+*.bak
+.DS_Store
+.env.local
+
+# ============================================================================
+# 🗄️ DATABASE & PERSISTENCE
+# ============================================================================
 *.db
 *.sqlite
 *.sqlite3
+*.sql
 dump.rdb
+data/
+postgres_data/
+mysql_data/
+mongodb_data/
 
-# =================================
+# ============================================================================
 # 📊 LOGS & MONITORING
-# =================================
+# ============================================================================
 logs/
 *.log
 *.out
 *.err
+.log
 
-# =================================
-# 🛠️ DEVELOPMENT TOOLS
-# =================================
-# IDE
+# Monitoring data
+metrics/
+traces/
+profiling/
+
+# ============================================================================
+# 🛠️ DEVELOPMENT TOOLS & IDE
+# ============================================================================
+# VSCode
 .vscode/
+*.code-workspace
+
+# JetBrains
 .idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim/Neovim
 *.swp
 *.swo
 *~
+.netrwhist
 
-# OS
+# Editor backups
+*.bak
+*.backup
+*.orig
+
+# ============================================================================
+# 🖥️ OPERATING SYSTEM FILES
+# ============================================================================
+# macOS
 .DS_Store
-.DS_Store?
+.AppleDouble
+.LSOverride
 ._*
 .Spotlight-V100
 .Trashes
-ehthumbs.db
-Thumbs.db
 
-# =================================
-# 🐳 DOCKER & INFRASTRUCTURE
-# =================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+.directory
+*~
+
+# ============================================================================
+# 🐳 DOCKER & CONTAINERIZATION
+# ============================================================================
 .dockerignore
 docker-compose.override.yml
+docker-compose.local.yml
 
+# Docker build artifacts
+.docker/
+docker_build/
+
+# ============================================================================
+# ☸️ KUBERNETES & INFRASTRUCTURE
+# ============================================================================
 # Terraform
 *.tfstate
 *.tfstate.*
@@ -145,24 +232,69 @@ docker-compose.override.yml
 *.tfvars
 !*.tfvars.example
 
-# =================================  
-# 📦 TEMPORARY FILES
-# =================================
+# Kubernetes
+kubeconfig
+.kube/
+
+# ============================================================================
+# 🔧 TEMPORARY & CACHE FILES
+# ============================================================================
 tmp/
 temp/
 .cache/
 .parcel-cache/
+.turbo/
+.nx/
+.grunt/
 
-# =================================
-# 🔧 MISC
-# =================================
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Build caches
+dist/
+build/
+.cache/
 
-# Backup files
-*.bak
-*.backup
-*.orig
+# OS temp files
+$RECYCLE.BIN/
+
+# ============================================================================
+# 📦 PROJECT-SPECIFIC IGNORES (CulinaryCrafts)
+# ============================================================================
+# Documentation
 GITHUB-DOCKER-GUIDE.md
+
+# Claude/AI agent files
+.claude/
+
+# Trace files
+trace_test/trace
+
+# Temporary scripts (keep only essential ones in git)
+scripts/*.bat
+scripts/*.ps1
+!scripts/package.json
+
+# Build outputs
+.next/
+out/
+dist/
+
+# Environment setup files
+.env.setup
+*.setup
+
+# ============================================================================
+# ⚠️ IMPORTANT: Exception Rules (Files to keep)
+# ============================================================================
+# Keep example files
+!.env.example
+!*.example.json
+!*.example.yml
+!*.example.yaml
+
+# Keep documentation
+!docs/
+!README.md
+!QUICKSTART.md
+
+# Keep configuration examples
+!*.config.example.js
+!*.config.example.ts
