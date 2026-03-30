@@ -169,7 +169,7 @@ export const DesignSystemPreview: React.FC = () => {
             <span className="badge-success">Health ✓</span>
             <span className="badge-warm">Vegetarian 🌿</span>
             <span className="badge-success">Quick Meal ⚡</span>
-            <span className="badge-warm">Beginner Friendly 👨‍🍳</span>
+            <span className="badge-warm">Beginner Friendly</span>
           </div>
         </section>
 

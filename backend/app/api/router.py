@@ -12,44 +12,21 @@ import google.generativeai as genai
 import os
 from dotenv import load_dotenv
 # Import Pydantic models
-try:
-    from app.models import (
+from app.models import (
         APIInfo, HealthResponse, ChatRequest, ChatResponse, 
         RecipeSearchResponse, Recipe, UserProfile, UserPreferences,
-        RecipeSearchQuery, DietaryType, CookingDifficulty, CuisineType,
         ErrorResponse
-    )
-except ImportError:
-    # Fallbacks for development
-    from pydantic import BaseModel
-    
-    class APIInfo(BaseModel):
-        message: str
-        description: str  
-        version: str
-        endpoints: Dict[str, str]
-    
-    class HealthResponse(BaseModel):
-        status: str
-        service: str
-        version: str
-    
-    class ChatMessage(BaseModel):
-        role: str
-        content: str
-
-    class ChatRequest(BaseModel):
-        message: str
-        user_id: Optional[str] = None
-        history: Optional[List[ChatMessage]] = []
-    
-    class ChatResponse(BaseModel):
-        message: str
-        input: dict
-        response: str
-        conversation_id: str
-        suggestions: Optional[List[str]] = []
-        state: Optional[Dict[str, Any]] = {}
+)
+from fastapi import Depends  # อย่าลืมเช็กว่ามี import ตัวนี้ด้านบนไหม
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models_db import ChatLog # เช็กชื่อคลาสให้ตรงกับที่สร้างใน models_db.py นะครับ
+from app.config.prompts import (
+    build_chat_prompt,
+    build_preference_context,
+    build_keyword_extraction_prompt,
+    GENERATION_CONFIG
+)
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +53,7 @@ load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("❌ ไม่พบ GEMINI_API_KEY ในไฟล์ .env")
-genai.configure(api_key=api_key)
+genai.configure(api_key=api_key)  # type: ignore
 
 @router.get(
     "/",
@@ -85,7 +62,7 @@ genai.configure(api_key=api_key)
     description="Get comprehensive information about the Culinary Crafts API, including available endpoints and features.",
     tags=["Core"]
 )
-async def api_root() -> APIInfo:
+async def api_root() -> "APIInfo":
     """
     **Culinary Crafts API Root Endpoint**
     
@@ -148,15 +125,15 @@ async def api_health() -> HealthResponse:
 # =================================
 # 🤖 AI ASSISTANT ENDPOINTS
 # =================================
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
+model = genai.GenerativeModel('gemini-1.5-flash-latest') # type: ignore
 def get_available_model():
     try:
-        for m in genai.list_models():
+        for m in genai.list_models(): # type: ignore
             if 'generateContent' in m.supported_generation_methods:
                 logger.info(f"✅ Found working model: {m.name}")
                 if 'gemini-1.5-flash' in m.name:
                     return m.name
-        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods] # type: ignore
         return models[0] if models else "gemini-pro"
     except Exception as e:
         logger.error(f"❌ Error listing models: {e}")
@@ -164,7 +141,7 @@ def get_available_model():
 
 working_model_name = get_available_model()
 logger.info(f"🚀 Using model: {working_model_name}")
-model = genai.GenerativeModel(working_model_name)
+model = genai.GenerativeModel(working_model_name) # type: ignore
 @router.post(
     "/chat",
     response_model=ChatResponse,
@@ -191,42 +168,67 @@ model = genai.GenerativeModel(working_model_name)
 )
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_assistant(request: ChatRequest):
+async def chat_with_assistant(
+    request: ChatRequest, 
+    db: Session = Depends(get_db)
+):
     user_query = request.message
+    session_id = request.conversation_id if request.conversation_id else "test"
     
     try:
-        extract_prompt = f"จากประโยค: '{user_query}' ช่วยสกัดชื่อวัตถุดิบหรือชื่ออาหารออกมาเป็นคำสั้นๆ แค่คำเดียวหรือสองคำ เช่น 'ไก่', 'หมู', 'ไข่ดาว' (ตอบแค่คำนั้นไม่ต้องมีคำบรรยาย)"
+        # 1. 🧠 ดึงประวัติการคุย 5 ข้อความล่าสุดจาก Database
+        past_messages = db.query(ChatLog).filter(
+            ChatLog.session_id == session_id
+        ).order_by(ChatLog.created_at.desc()).limit(5).all()
+
+        # เรียงกลับจากเก่าไปใหม่ เพื่อให้ AI อ่านลำดับเหตุการณ์ถูก
+        past_messages.reverse()
+
+        # 2. 📝 สร้าง Memory Context
+        history_context = ""
+        for msg in past_messages:
+            history_context += f"User: {msg.user_query}\nAI: {msg.ai_response}\n"
+
+        # 3. 🍳 ทำ RAG (สกัด Keyword และหา PDF)
+        extract_prompt = build_keyword_extraction_prompt(user_query)
         extracted_keywords = model.generate_content(extract_prompt).text.strip()
+        logger.info(f"🔍 Extracted keywords: {extracted_keywords}")
         
-        found_docs = recipe_engine.search(extracted_keywords, limit=3)
-        context = "\n---\n".join([d['content'] for d in found_docs])
-        prompt = f"""
-        คุณคือ AI Chef ผู้เชี่ยวชาญ...
-        ข้อมูลจากไฟล์เอกสารของคุณ:
-        {context}
-        คำถามจากผู้ใช้: "{user_query}"
-        """
-        response = model.generate_content(prompt)
+        found_docs = recipe_engine.search(extracted_keywords, limit=2)
+        doc_context = "\n---\n".join([d['content'] for d in found_docs]) if found_docs else ""
+        logger.info(f"📖 Found {len(found_docs)} documents from RAG")
+
+        # 4. 🚀 สร้าง Final Prompt ด้วย Centralized Builder
+        final_prompt = build_chat_prompt(
+            user_query=user_query,
+            history_context=history_context,
+            rag_context=doc_context,
+            user_prefs_context="",  # TODO: เพิ่มการดึง user preferences เมื่อ auth พร้อม
+            thought_process=True
+        )
+        logger.debug(f"📝 Final prompt built (length: {len(final_prompt)} chars)")
+
+        # 5. ส่งให้ Gemini
+        response = model.generate_content(final_prompt)
         ai_response = response.text
 
-        return ChatResponse(
-            message="Success",
-            response=ai_response,
-            input={"message": user_query},
-            conversation_id="test",
-            suggestions=[]
-        )
+        # 6. บันทึกลง DB (เหมือนเดิม)
+        new_log = ChatLog(session_id=session_id, user_query=user_query, ai_response=ai_response)
+        db.add(new_log)
+        db.commit()
+
+        return ChatResponse(response=ai_response, conversation_id=session_id, suggestions=[], state={})
 
     except Exception as e:
+        db.rollback()
         logger.error(f"Error: {str(e)}")
         return ChatResponse(
             message="Error",
             response=f"ขออภัยครับ เชฟเกิดข้อผิดพลาด: {str(e)}",
-            input={"message": user_query},
             conversation_id="error",
-            suggestions=[]
+            suggestions=[],
+            state={}
         )
-
 # =================================
 # 🔍 RECIPE SEARCH & RETRIEVAL
 # =================================
@@ -396,6 +398,11 @@ async def update_user_preferences(preferences: UserPreferences) -> UserPreferenc
     """
     # TODO: Implement Firestore user preferences update
     return preferences
+
+@router.get("/history/{session_id}")
+async def get_chat_history(session_id: str, db: Session = Depends(get_db)):
+    history = db.query(ChatLog).filter(ChatLog.session_id == session_id).order_by(ChatLog.created_at.asc()).all()
+    return history
 
 # =================================
 # 📊 MONITORING & METRICS

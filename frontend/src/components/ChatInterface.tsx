@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Send, ArrowUp, Loader } from 'lucide-react'
+import { Send, ArrowUp, Loader, ChefHat } from 'lucide-react'
 import ImageAttachment from './ImageAttachment'
 import { apiClient } from '../services/apiClient'
 
@@ -16,7 +16,7 @@ export const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Welcome to Culinary Crafts! 👨‍🍳 Tell me what ingredients you have, or ask me anything about cooking. I can also help if you share a photo of your ingredients!',
+      text: 'Welcome to Culinary Crafts! Tell me what ingredients you have, or ask me anything about cooking. I can also help if you share a photo of your ingredients!',
       isUser: false,
       timestamp: new Date(),
     },
@@ -28,6 +28,9 @@ export const ChatInterface: React.FC = () => {
   const [selectedImageBase64, setSelectedImageBase64] = useState<string>('')
   const [selectedImageType, setSelectedImageType] = useState<string>('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Check if we should show suggestions (only initial message, no user messages)
+  const showSuggestions = messages.length === 1 && messages[0].isUser === false
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -106,10 +109,10 @@ export const ChatInterface: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-culinary-cream">
-      {/* Header */}
+    <div className="flex flex-col h-screen bg-culinary-cream overflow-hidden">
+      {/* Header - Sticky */}
       <motion.header
-        className="sticky top-0 z-10 border-b border-culinary-terracotta/10 bg-culinary-warmWhite/90 backdrop-blur-md"
+        className="sticky top-0 z-20 border-b border-culinary-terracotta/10 bg-culinary-warmWhite/90 backdrop-blur-md flex-shrink-0"
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
@@ -119,11 +122,11 @@ export const ChatInterface: React.FC = () => {
             <h1 className="text-3xl font-bold gradient-text-warm">Culinary Crafts</h1>
             <p className="text-sm text-culinary-deepBrown/60">Your AI Cooking Companion</p>
           </div>
-          <div className="text-4xl">👨‍🍳</div>
+          <ChefHat size={40} className="text-culinary-terracotta" />
         </div>
       </motion.header>
 
-      {/* Messages Container */}
+      {/* Messages Container - Scrollable with flex-1 */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-4xl mx-auto w-full">
         <AnimatePresence>
           {messages.map((message, index) => (
@@ -178,12 +181,47 @@ export const ChatInterface: React.FC = () => {
           </motion.div>
         )}
 
+        {/* Suggested Messages - Auto-hide when not empty */}
+        <AnimatePresence>
+          {showSuggestions && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-3 mt-6 pb-4"
+            >
+              <p className="text-xs text-culinary-deepBrown/50 font-medium">💡 Try these:</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'Suggest recipes from my ingredients',
+                  'Create a 30-minute dinner plan',
+                  'Turn this into a shopping list',
+                  'Help me cook what\'s in this photo',
+                  'Make it healthier + high protein',
+                ].map((suggestion, idx) => (
+                  <motion.button
+                    key={idx}
+                    type="button"
+                    onClick={() => setInput(suggestion)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-3 py-1.5 rounded-full border border-culinary-terracotta/30 bg-culinary-warmWhite hover:bg-culinary-terracotta/10 text-culinary-deepBrown/70 text-xs font-medium transition-colors"
+                  >
+                    {suggestion}
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
+      {/* Input Area - Fixed at viewport bottom - flex-shrink-0 */}
       <motion.div
-        className="sticky bottom-0 border-t border-culinary-terracotta/10 bg-culinary-warmWhite/90 backdrop-blur-md"
+        className="flex-shrink-0 border-t border-culinary-terracotta/10 bg-culinary-warmWhite/95 backdrop-blur-md shadow-lg"
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
@@ -218,17 +256,19 @@ export const ChatInterface: React.FC = () => {
               disabled={isLoading}
             />
 
-            <button
+            <motion.button
               type="submit"
               disabled={isLoading || (!input.trim() && !selectedImageBase64)}
-              className="btn-primary rounded-full p-3 hover:shadow-warm disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="btn-primary rounded-full p-3 hover:shadow-warm disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               {isLoading ? (
                 <Loader size={20} className="animate-spin" />
               ) : (
                 <ArrowUp size={20} />
               )}
-            </button>
+            </motion.button>
           </form>
 
           <p className="text-xs text-culinary-deepBrown/50 mt-3 text-center">

@@ -1,6 +1,34 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Chrome } from 'lucide-react'
+import { ChefHat } from 'lucide-react'
+
+// Inline Google Logo SVG (no external packages needed)
+const GoogleLogo = ({ size = 24 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M23.75 12.2766C23.75 11.4641 23.6797 10.6719 23.5484 9.90625H12.125V14.5859H18.7305C18.4453 16.125 17.5859 17.4375 16.2734 18.3203V21.3281H20.1953C22.4844 19.2109 23.75 16.1562 23.75 12.2766Z"
+      fill="#4285F4"
+    />
+    <path
+      d="M12.125 24C15.3984 24 18.1562 22.9219 20.1953 21.3281L16.2734 18.3203C15.1719 19.0703 13.7734 19.5312 12.125 19.5312C8.94531 19.5312 6.25781 17.3906 5.28906 14.5156H1.23438V17.625C3.27344 21.6953 7.46094 24 12.125 24Z"
+      fill="#34A853"
+    />
+    <path
+      d="M5.28906 14.5156C5.03906 13.7656 4.90625 12.9609 4.90625 12.125C4.90625 11.2891 5.03906 10.4844 5.28906 9.73438V6.625H1.23438C0.453125 8.19531 0 10.1016 0 12.125C0 14.1484 0.453125 16.0547 1.23438 17.625L5.28906 14.5156Z"
+      fill="#FBBC05"
+    />
+    <path
+      d="M12.125 4.71875C13.8828 4.71875 15.4531 5.32031 16.7109 6.53125L20.2734 2.96875C18.1562 0.992188 15.3984 0 12.125 0C7.46094 0 3.27344 2.30469 1.23438 6.375L5.28906 9.73438C6.25781 6.85938 8.94531 4.71875 12.125 4.71875Z"
+      fill="#EB4335"
+    />
+  </svg>
+)
 
 interface GoogleLoginPageProps {
   onLogin?: () => void
@@ -77,11 +105,11 @@ export const GoogleLoginPage: React.FC<GoogleLoginPageProps> = ({
           variants={itemVariants}
         >
           <motion.div
-            className="text-6xl mb-4 inline-block"
+            className="mb-4 inline-block"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            👨‍🍳
+            <ChefHat size={80} className="text-culinary-terracotta" />
           </motion.div>
 
           <h1 className="text-5xl md:text-6xl font-bold gradient-text-warm mb-4">
@@ -114,7 +142,7 @@ export const GoogleLoginPage: React.FC<GoogleLoginPageProps> = ({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <Chrome size={24} />
+            <GoogleLogo size={24} />
             <span>{isLoading ? 'Connecting...' : 'Continue with Google'}</span>
           </motion.button>
 

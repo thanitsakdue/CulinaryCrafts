@@ -81,23 +81,22 @@ class ChatContext(BaseModel):
     )
 
 class ChatRequest(BaseModel):
-    """Chat message request to AI assistant"""
     message: str = Field(
-        ..., 
+        ...,
         min_length=1,
         max_length=1000,
         description="User's message to the AI cooking assistant",
-        example="How do I make Thai green curry for beginners?"
+        examples=["How do I make Thai green curry for beginners?"] # แก้ตรงนี้
     )
     user_id: Optional[str] = Field(
         default=None,
         description="Unique user identifier for conversation tracking",
-        example="user_12345"
+        examples=["user_12345"]
     )
     conversation_id: Optional[str] = Field(
         default=None,
         description="Conversation ID for multi-turn conversations",
-        example="conv_67890"
+        examples=["conv_67890"]
     )
     context: Optional[ChatContext] = Field(
         default=None,
@@ -106,37 +105,39 @@ class ChatRequest(BaseModel):
 
 class UserPreferences(BaseModel):
     """User cooking preferences and settings"""
-    dietary_preferences: List[DietaryType] = Field(
+    # 1. เปลี่ยนจาก dietary_preferences เป็น dietary_types (ให้ตรงกับ DB และ Frontend)
+    dietary_types: List[str] = Field(
         default=[],
         description="User's dietary restrictions"
     )
+    
     allergies: List[str] = Field(
         default=[],
-        description="Food allergies",
-        example=["nuts", "shellfish"]
+        description="Food allergies"
     )
-    cooking_skill: CookingSkill = Field(
-        default=CookingSkill.BEGINNER,
-        description="User's cooking skill level"
+
+    # 2. ฟิลด์ที่หน้าบ้านไม่ได้ส่งมา ให้ใส่ default ไว้เพื่อไม่ให้มันฟ้อง 422
+    cooking_skill: str = Field(
+        default="beginner"
     )
-    favorite_cuisines: List[CuisineType] = Field(
+
+    favorite_cuisines: List[str] = Field(
         default=[],
         description="User's favorite cuisine types"
     )
+
+    # 3. มั่นใจว่าชื่อฟิลด์นี้สะกดถูกตามที่ Frontend ส่ง (kitchen_equipment)
     kitchen_equipment: List[str] = Field(
         default=[],
-        description="Available kitchen equipment",
-        example=["oven", "stovetop", "microwave", "blender"]
+        description="Available kitchen equipment"
     )
+
     spice_level: str = Field(
-        default="medium",
-        description="Preferred spice level",
-        example="mild"
+        default="medium"
     )
+
     measurement_units: str = Field(
-        default="metric",
-        description="Preferred measurement system (metric/imperial)",
-        example="metric"
+        default="metric"
     )
 
 # =================================
@@ -152,9 +153,9 @@ class APIInfo(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response"""
-    status: str = Field(description="Service health status", example="healthy")
-    service: str = Field(description="Service name", example="culinary-crafts-api")
-    version: str = Field(description="Service version", example="1.0.0")
+    status: str = Field(description="Service health status", examples=["healthy"])
+    service: str = Field(description="Service name", examples=["culinary-crafts-api"])
+    version: str = Field(description="Service version", examples=["1.0.0"])
     timestamp: Optional[datetime] = Field(default=None, description="Health check timestamp")
     uptime: Optional[str] = Field(default=None, description="Service uptime")
 
@@ -182,11 +183,30 @@ class ChatResponse(BaseModel):
 class NutritionInfo(BaseModel):
     """Nutritional information for recipes"""
     calories: int = Field(description="Calories per serving")
-    protein: str = Field(description="Protein content", example="12g")
-    carbs: str = Field(description="Carbohydrate content", example="25g")
-    fat: str = Field(description="Fat content", example="8g")
-    fiber: Optional[str] = Field(default=None, description="Fiber content", example="5g")
-    sodium: Optional[str] = Field(default=None, description="Sodium content", example="400mg")
+    protein: str = Field(
+        description="Protein content", 
+        examples=["12g"]
+    )
+    carbs: str = Field(
+        description="Carbohydrate content", 
+        examples=["25g"]
+    )
+    fat: str = Field(
+        description="Fat content", 
+        examples=["8g"]
+    )
+    
+    # สำหรับตัวเลือก (Optional)
+    fiber: Optional[str] = Field(
+        default=None, 
+        description="Fiber content", 
+        examples=["5g"]
+    )
+    sodium: Optional[str] = Field(
+        default=None, 
+        description="Sodium content", 
+        examples=["400mg"]
+    )
 
 class Recipe(BaseModel):
     """Recipe information"""
@@ -256,9 +276,9 @@ class ErrorResponse(BaseModel):
 class RecipeSearchQuery(BaseModel):
     """Recipe search query parameters"""
     query: Optional[str] = Field(
-        default=None,
-        description="Search term for recipes",
-        example="thai curry"
+            default=None,
+            description="Search term for recipes",
+            examples=["thai curry"]
     )
     dietary: Optional[List[DietaryType]] = Field(
         default=None,

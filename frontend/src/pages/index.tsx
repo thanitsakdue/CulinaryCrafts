@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import { motion } from 'framer-motion'
+import { ChefHat, Beaker } from 'lucide-react'
 import GoogleLoginPage from '../components/GoogleLoginPage'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
@@ -22,9 +23,9 @@ const Home: NextPage = () => {
         <motion.div
           animate={{ scale: [0.95, 1, 0.95] }}
           transition={{ duration: 1.5, repeat: Infinity }}
-          className="text-6xl"
+          className="text-6xl text-culinary-terracotta"
         >
-          👨‍🍳
+          <ChefHat size={64} />
         </motion.div>
       </div>
     )
@@ -55,13 +56,16 @@ const Home: NextPage = () => {
           />
           {/* Test Login Button - Remove this in production */}
           <div className="fixed bottom-4 right-4 z-50">
-            <button
+            <motion.button
               onClick={handleTestLogin}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg shadow-lg transition"
+              className="px-6 py-3 bg-gradient-to-br from-culinary-terracotta to-culinary-coral hover:shadow-warm text-white font-semibold rounded-xl flex items-center gap-2 transition-all active:scale-95"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               title="Demo login - for frontend testing only"
             >
-              🧪 Test Login
-            </button>
+              <Beaker size={18} />
+              Test Login
+            </motion.button>
           </div>
         </div>
       ) : null}
@@ -69,4 +73,4 @@ const Home: NextPage = () => {
   )
 }
 
-export default Home
+  export default Home

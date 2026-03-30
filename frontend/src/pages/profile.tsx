@@ -1,6 +1,7 @@
 import React from 'react'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import Link from 'next/link'
+import PreferencesPanel from '../components/PreferencesPanel'
 
 // Example protected page showing user info
 export default function UserProfile() {
@@ -25,36 +26,41 @@ export default function UserProfile() {
 
   return (
     <div className="min-h-screen kitchen-bg p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="culinary-card">
-          <h1 className="text-4xl font-bold gradient-text-warm mb-6">Profile</h1>
+      <div className="max-w-6xl mx-auto">
+        {/* Profile Header */}
+        <div className="culinary-card mb-8">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-6">
+              {session.user?.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={session.user.image}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full border-4 border-culinary-terracotta object-cover"
+                />
+              )}
 
-          {session.user?.image && (
-            <img
-              src={session.user.image}
-              alt="Profile"
-              className="w-24 h-24 rounded-full mb-4 border-2 border-culinary-terracotta"
-            />
-          )}
-
-          <div className="space-y-2 mb-6">
-            <p className="text-lg">
-              <strong>Name:</strong> {session.user?.name}
-            </p>
-            <p className="text-lg">
-              <strong>Email:</strong> {session.user?.email}
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <Link href="/chat" className="btn-primary flex-1 text-center">
-              Go to Chat
-            </Link>
-            <button onClick={() => signOut()} className="btn-secondary flex-1">
-              Sign Out
-            </button>
+              <div>
+                <h1 className="text-4xl font-bold gradient-text-warm mb-2">{session.user?.name}</h1>
+                <p className="text-lg text-culinary-deepBrown/70">{session.user?.email}</p>
+                <div className="mt-4 flex gap-3">
+                  <Link href="/chat" className="btn-primary text-center">
+                    Back to Chat
+                  </Link>
+                  <button
+                    onClick={() => signOut({ callbackUrl: '/' })}
+                    className="px-6 py-3 rounded-xl border-2 border-culinary-terracotta/40 text-culinary-terracotta hover:bg-culinary-terracotta/10 transition-colors font-semibold"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Preferences Panel */}
+        <PreferencesPanel />
       </div>
     </div>
   )

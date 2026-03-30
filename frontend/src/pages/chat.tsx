@@ -3,6 +3,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { ChefHat } from 'lucide-react'
 import ChatWorkspace from '../components/ChatWorkspace'
 
 export default function ChatPage() {
@@ -14,9 +15,9 @@ export default function ChatPage() {
         <motion.div
           animate={{ scale: [0.95, 1, 0.95] }}
           transition={{ duration: 1.5, repeat: Infinity }}
-          className="text-6xl"
+          className="text-culinary-terracotta"
         >
-          👨‍🍳
+          <ChefHat size={64} />
         </motion.div>
       </div>
     )

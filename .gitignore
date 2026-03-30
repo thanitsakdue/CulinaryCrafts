@@ -298,3 +298,5 @@ dist/
 # Keep configuration examples
 !*.config.example.js
 !*.config.example.ts
+.agents/skills/culinary-crafts-expert-analysis/SKILL.md
+.env.docker

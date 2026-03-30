@@ -36,10 +36,17 @@ class APIClient {
   }
 
   // Chat with text only
-  async sendMessage(message: string): Promise<ChatResponse> {
+// 1. แก้ไข Chat with text only ให้รับ conversationId และ userId
+  async sendMessage(
+    message: string, 
+    conversationId?: string, 
+    userId?: string
+  ): Promise<ChatResponse> {
     try {
       const response = await this.client.post<ChatResponse>('/chat', {
         message,
+        conversation_id: conversationId, // ส่งไปให้ Backend
+        user_id: userId,                 // ส่งไปให้ Backend ดึง Preferences
       })
       return response.data
     } catch (error) {
@@ -48,17 +55,19 @@ class APIClient {
     }
   }
 
-  // Chat with multimodal (text + image)
+  // 2. แก้ไข Chat with multimodal ให้รับ userId เพิ่ม
   async sendMessageWithImage(
     message: string,
     imageBase64: string,
-    imageType: string = 'image/jpeg'
+    imageType: string = 'image/jpeg',
+    userId?: string // เพิ่มตัวแปรนี้
   ): Promise<ChatResponse> {
     try {
       const response = await this.client.post<ChatResponse>('/chat/multimodal', {
         message,
         imageData: imageBase64,
         imageType,
+        user_id: userId, // ส่งไปให้ Backend
       })
       return response.data
     } catch (error) {
@@ -66,7 +75,31 @@ class APIClient {
       throw error
     }
   }
+  // --- เพิ่มส่วนนี้เข้าไปครับ ---
+  
+  // Update User Preferences
+  async updateUserPreferences(preferences: any): Promise<any> {
+    try {
+      const response = await this.client.put('/user/preferences', preferences)
+      return response.data
+    } catch (error) {
+      console.error('Error updating preferences:', error)
+      throw error
+    }
+  }
 
+  // Get User Preferences
+  async getUserPreferences(userId?: string): Promise<any> {
+    try {
+      const response = await this.client.get('/user/profile', {
+        params: { user_id: userId }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error fetching preferences:', error)
+      throw error
+    }
+  }
   // Upload image with form data (alternative approach)
   async uploadImageAndChat(
     message: string,
