@@ -19,11 +19,12 @@ httpx==0.25.2
 python-jose[cryptography]==3.3.0
 
 psycopg2-binary==2.9.9
+
 # =================================
 # 📄 PDF PROCESSING & VECTOR SEARCH (Added for PDF Engine)
 # =================================
-langchain-text-splitters
-pymupdf
-faiss-cpu
-langchain-community
-langchain-google-genai>=1.0.0
+langchain-text-splitters==0.0.1
+pymupdf==1.23.8
+faiss-cpu==1.7.4
+langchain-community==0.0.13
+langchain-google-genai==1.0.1
