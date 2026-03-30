@@ -103,20 +103,6 @@ class Settings(BaseSettings):
         description="Trusted Proxy IPs"
     )
     
-    class Config:
-        """Pydantic configuration."""
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
-        
-        # Environment variable parsing
-        @classmethod
-        def parse_env_var(cls, field_name: str, raw_val: str) -> any:
-            """Parse environment variables."""
-            if field_name in ['CORS_ORIGINS', 'ALLOWED_HOSTS', 'TRUSTED_PROXIES']:
-                return raw_val.split(',') if raw_val else []
-            return raw_val
-    
     def is_production(self) -> bool:
         """Check if running in production environment."""
         return self.ENVIRONMENT.lower() == "production"
