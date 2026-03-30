@@ -1,4 +1,4 @@
-version: '3.8'
+# ลบบรรทัด version: '3.8' ทิ้งได้เลยครับ (Docker รุ่นใหม่ไม่ใช้แล้ว)
 
 services:
   # =================================
@@ -28,10 +28,11 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
-    
     restart: unless-stopped
     networks:
       - culinary-network
+    # --- ลบ volumes: ตรงนี้ออกไปแล้ว ---
+
   pgadmin:
     image: dpage/pgadmin4
     container_name: culinary-pgadmin
@@ -41,10 +42,11 @@ services:
     ports:
       - "5050:80"
     networks:
-      - culinary-network    # <--- บรรทัดนี้ต้องย่อหน้าเข้ามา 2 เคาะจากคำว่า networks
+      - culinary-network
     depends_on:
       - postgres
     restart: unless-stopped
+
   # =================================
   # ⚛️ FRONTEND WEB APP
   # =================================
@@ -114,9 +116,8 @@ services:
     networks:
       - culinary-network
 
-
 # =================================
-# 🌐 NETWORKS (Merged)
+# 🌐 NETWORKS
 # =================================
 networks:
   culinary-network:
@@ -124,3 +125,10 @@ networks:
   default:
     name: culinary-crafts
     driver: bridge
+
+# =================================
+# 💾 VOLUMES (เพิ่มส่วนนี้เข้าไป)
+# =================================
+volumes:
+  postgres_data:
+  redis_data:

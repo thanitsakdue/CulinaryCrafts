@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { X, Plus, Flame, Utensils, AlertCircle } from 'lucide-react'
-
+import { apiClient } from '../services/apiClient'
+import { useSession } from 'next-auth/react'
 interface Preferences {
   allergies: string[]
   spiceLevel: 'mild' | 'medium' | 'hot' | 'very-hot'
@@ -59,12 +60,13 @@ const DIETARY_OPTIONS = [
 ]
 
 export default function PreferencesPanel() {
+  const { data: session } = useSession()
   const [preferences, setPreferences] = useState<Preferences>({
     allergies: [],
-    spiceLevel: 'medium',
+    spiceLevel: '' as any,
     cuisines: [],
     dietaryType: [],
-    ingredientsToAvoid: [],
+    ingredientsToAvoid: []
   })
 
   const [customAllergy, setCustomAllergy] = useState('')
@@ -92,11 +94,36 @@ export default function PreferencesPanel() {
     }
   }, [])
 
-  const handleSave = () => {
-    localStorage.setItem('culinarycrafts.preferences', JSON.stringify(preferences))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }
+  const toArray = (val: any) => {
+    if (!val) return [];
+    return Array.isArray(val) ? val : [val];
+  };
+
+  const handleSave = async () => {
+    try {
+      const payload = {
+        user_id: session?.user?.email ?? "test_user",
+        spice_level: Number(preferences.spiceLevel),
+
+        // 🔥 FIX ตรงนี้
+        allergies: toArray(preferences.allergies),
+        dietary_types: toArray(preferences.dietaryType),
+        favorite_cuisines: toArray(preferences.cuisines),
+        ingredientsToAvoid: toArray(preferences.ingredientsToAvoid),
+
+      };
+
+      console.log("Payload:", payload);
+
+      await apiClient.updateUserPreferences(payload);
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+
+    } catch (error: any) {
+      console.error("Save failed:", error?.response?.data);
+    }
+  };
 
   const toggleAllergy = (allergy: string) => {
     setPreferences((prev) => ({

@@ -21,6 +21,12 @@ from fastapi import Depends  # อย่าลืมเช็กว่ามี 
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models_db import ChatLog # เช็กชื่อคลาสให้ตรงกับที่สร้างใน models_db.py นะครับ
+from app.config.prompts import (
+    build_chat_prompt,
+    build_preference_context,
+    build_keyword_extraction_prompt,
+    GENERATION_CONFIG
+)
 
 logger = logging.getLogger(__name__)
 
@@ -183,25 +189,24 @@ async def chat_with_assistant(
         for msg in past_messages:
             history_context += f"User: {msg.user_query}\nAI: {msg.ai_response}\n"
 
-        # 3. 🍳 ทำ RAG (สกัด Keyword และหา PDF เหมือนเดิม)
-        extract_prompt = f"จากประโยค: '{user_query}' สกัดชื่อวัตถุดิบหรืออาหารสั้นๆ..."
+        # 3. 🍳 ทำ RAG (สกัด Keyword และหา PDF)
+        extract_prompt = build_keyword_extraction_prompt(user_query)
         extracted_keywords = model.generate_content(extract_prompt).text.strip()
+        logger.info(f"🔍 Extracted keywords: {extracted_keywords}")
+        
         found_docs = recipe_engine.search(extracted_keywords, limit=2)
-        doc_context = "\n---\n".join([d['content'] for d in found_docs])
+        doc_context = "\n---\n".join([d['content'] for d in found_docs]) if found_docs else ""
+        logger.info(f"📖 Found {len(found_docs)} documents from RAG")
 
-        # 4. 🚀 รวมร่าง Prompt (History + Docs + New Query)
-        final_prompt = f"""
-        คุณคือ AI Chef ผู้เชี่ยวชาญ...
-        
-        นี่คือประวัติการคุยที่ผ่านมาเพื่อใช้เป็นบริบท:
-        {history_context}
-        
-        ข้อมูลเสริมจากตำราอาหาร:
-        {doc_context}
-        
-        คำถามใหม่จากผู้ใช้: "{user_query}"
-        (หากผู้ใช้ถามถึงสิ่งที่เคยคุยไปแล้ว ให้ใช้ประวัติการคุยข้างต้นในการตอบด้วย)
-        """
+        # 4. 🚀 สร้าง Final Prompt ด้วย Centralized Builder
+        final_prompt = build_chat_prompt(
+            user_query=user_query,
+            history_context=history_context,
+            rag_context=doc_context,
+            user_prefs_context="",  # TODO: เพิ่มการดึง user preferences เมื่อ auth พร้อม
+            thought_process=True
+        )
+        logger.debug(f"📝 Final prompt built (length: {len(final_prompt)} chars)")
 
         # 5. ส่งให้ Gemini
         response = model.generate_content(final_prompt)
@@ -218,6 +223,7 @@ async def chat_with_assistant(
         db.rollback()
         logger.error(f"Error: {str(e)}")
         return ChatResponse(
+            message="Error",
             response=f"ขออภัยครับ เชฟเกิดข้อผิดพลาด: {str(e)}",
             conversation_id="error",
             suggestions=[],
