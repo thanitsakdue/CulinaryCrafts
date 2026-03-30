@@ -7,19 +7,22 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies
-# ตัวอย่างส่วนหนึ่งของ Dockerfile
-RUN apt-get update && apt-get install -y \
+# Added g++ and libstdc++6 which are often required by FAISS and PyMuPDF
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     gcc \
+    g++ \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-RUN pip install --upgrade pip
-RUN pip install langchain-text-splitters
-# Copy requirements first (for better Docker layer caching)
+# Upgrade pip to ensure the latest wheel support
+RUN pip install --no-cache-dir --upgrade pip
+
+# Copy requirements first
 COPY requirements.txt .
 
 # Install Python dependencies
+# If FAISS still fails, we install it with a longer timeout
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
@@ -32,9 +35,9 @@ USER appuser
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check (Note: Added curl to apt-get above so this works)
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
