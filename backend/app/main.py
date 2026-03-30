@@ -17,10 +17,10 @@ from app.middleware.security import SecurityMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.config.settings import get_settings
 from .database import engine
-from . import models_db
+from app.models_db import Base, ChatLog, UserPreference
 
 logger = logging.getLogger(__name__)
-models_db.Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 settings = get_settings()
 
 @asynccontextmanager

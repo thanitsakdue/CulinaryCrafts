@@ -21,6 +21,9 @@ from fastapi import Depends  # อย่าลืมเช็กว่ามี 
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models_db import ChatLog # เช็กชื่อคลาสให้ตรงกับที่สร้างใน models_db.py นะครับ
+from app.models_db import UserPreference
+from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -168,46 +171,60 @@ async def chat_with_assistant(
 ):
     user_query = request.message
     session_id = request.conversation_id if request.conversation_id else "test"
+    # ดึง user_id มาจาก request (ที่เราแก้ frontend ให้ส่งมาแล้ว)
+    user_id = request.user_id if request.user_id else "default_user"
     
     try:
-        # 1. 🧠 ดึงประวัติการคุย 5 ข้อความล่าสุดจาก Database
-        past_messages = db.query(ChatLog).filter(
-            ChatLog.session_id == session_id
-        ).order_by(ChatLog.created_at.desc()).limit(5).all()
+        # --- [ส่วนที่เพิ่มใหม่: ดึง Preferences] ---
+        # 0. 👤 ดึงข้อมูลส่วนตัว (Preferences) ของผู้ใช้
+        user_pref = db.query(UserPreference).order_by(UserPreference.updated_at.desc()).first()
+        
+        pref_context = "ผู้ใช้คนนี้ไม่ได้ระบุข้อมูลส่วนตัว"
+        if user_pref:
+            pref_context = f"""
+            - ระดับความเผ็ดที่ทานได้: {user_pref.spice_level}
+            - ข้อจำกัดด้านอาหาร: {user_pref.dietary_types} (เช่น มังสวิรัติ)
+            - สิ่งที่แพ้ (ห้ามใส่เด็ดขาด): {user_pref.allergies}
+            - สไตล์อาหารที่ชอบ: {user_pref.favorite_cuisines}
+            """
+        # ------------------------------------------
 
-        # เรียงกลับจากเก่าไปใหม่ เพื่อให้ AI อ่านลำดับเหตุการณ์ถูก
+        # 1. 🧠 ดึงประวัติการคุย (เหมือนเดิม)
+        past_messages = db.query(ChatLog).filter(ChatLog.session_id == session_id).order_by(ChatLog.created_at.desc()).limit(5).all()
         past_messages.reverse()
+        history_context = "".join([f"User: {msg.user_query}\nAI: {msg.ai_response}\n" for msg in past_messages])
 
-        # 2. 📝 สร้าง Memory Context
-        history_context = ""
-        for msg in past_messages:
-            history_context += f"User: {msg.user_query}\nAI: {msg.ai_response}\n"
-
-        # 3. 🍳 ทำ RAG (สกัด Keyword และหา PDF เหมือนเดิม)
+        # 3. 🍳 ทำ RAG หา PDF (เหมือนเดิม)
         extract_prompt = f"จากประโยค: '{user_query}' สกัดชื่อวัตถุดิบหรืออาหารสั้นๆ..."
         extracted_keywords = model.generate_content(extract_prompt).text.strip()
         found_docs = recipe_engine.search(extracted_keywords, limit=2)
         doc_context = "\n---\n".join([d['content'] for d in found_docs])
 
-        # 4. 🚀 รวมร่าง Prompt (History + Docs + New Query)
+        # 4. 🚀 รวมร่าง Prompt (เพิ่ม Preferences เข้าไป)
         final_prompt = f"""
-        คุณคือ AI Chef ผู้เชี่ยวชาญ...
+        คุณคือ AI Chef ผู้เชี่ยวชาญที่ใส่ใจสุขภาพและเงื่อนไขส่วนบุคคลของผู้ใช้
         
-        นี่คือประวัติการคุยที่ผ่านมาเพื่อใช้เป็นบริบท:
+        [ข้อมูลสำคัญของผู้ใช้ที่คุณต้องปฏิบัติตามอย่างเคร่งครัด]:
+        {pref_context}
+        
+        [ประวัติการคุย]:
         {history_context}
         
-        ข้อมูลเสริมจากตำราอาหาร:
+        [ข้อมูลเสริมจากตำราอาหาร]:
         {doc_context}
         
         คำถามใหม่จากผู้ใช้: "{user_query}"
-        (หากผู้ใช้ถามถึงสิ่งที่เคยคุยไปแล้ว ให้ใช้ประวัติการคุยข้างต้นในการตอบด้วย)
+        
+        คำแนะนำ: 
+        1. หากผู้ใช้ถามเมนูที่ "ขัดกับสิ่งที่เขาแพ้" ให้เตือนและปฏิเสธอย่างสุภาพ พร้อมแนะนำทางเลือกอื่น
+        2. ปรับรสชาติ (เช่น ความเผ็ด) ให้ตรงตามระดับที่ผู้ใช้ชอบ
         """
 
         # 5. ส่งให้ Gemini
         response = model.generate_content(final_prompt)
         ai_response = response.text
 
-        # 6. บันทึกลง DB (เหมือนเดิม)
+        # 6. บันทึกลง DB (เพิ่ม user_id ลงไปใน ChatLog ด้วยถ้ามีฟิลด์นั้น)
         new_log = ChatLog(session_id=session_id, user_query=user_query, ai_response=ai_response)
         db.add(new_log)
         db.commit()
@@ -371,32 +388,39 @@ async def get_user_profile() -> UserProfile:
     "/user/preferences",
     response_model=UserPreferences,
     summary="Update User Preferences",
-    description="Update user cooking preferences, dietary restrictions, and kitchen settings.",
     tags=["User Management"]
 )
-async def update_user_preferences(preferences: UserPreferences) -> UserPreferences:
-    """
-    **Update User Cooking Preferences** ⚙️
-    
-    Customize your cooking experience by updating:
-    - Dietary restrictions and allergies
-    - Preferred cuisines and spice levels
-    - Cooking skill level
-    - Available kitchen equipment
-    - Measurement preferences (metric/imperial)
-    
-    **AI Learning:**
-    - Preferences influence recipe recommendations
-    - Cooking history improves suggestions
-    - Dietary restrictions ensure safe recommendations
-    """
-    # TODO: Implement Firestore user preferences update
-    return preferences
+async def update_user_preferences(
+    preferences: UserPreferences, 
+    db: Session = Depends(get_db)
+) -> UserPreferences:
+    user_id = "default_user" 
 
-@router.get("/history/{session_id}")
-async def get_chat_history(session_id: str, db: Session = Depends(get_db)):
-    history = db.query(ChatLog).filter(ChatLog.session_id == session_id).order_by(ChatLog.created_at.asc()).all()
-    return history
+    db_pref = db.query(UserPreference).filter(UserPreference.user_id == user_id).first()
+
+    if db_pref:
+        setattr(db_pref, "spice_level", preferences.spice_level)
+        setattr(db_pref, "dietary_types", preferences.dietary_types)
+        setattr(db_pref, "allergies", preferences.allergies)
+        setattr(db_pref, "favorite_cuisines", preferences.favorite_cuisines)
+    else:
+        # 4. สร้างใหม่
+        new_pref = UserPreference(
+            user_id=user_id,
+            spice_level=preferences.spice_level,
+            dietary_types=preferences.dietary_types, # แก้ตรงนี้ด้วย
+            allergies=preferences.allergies,
+            favorite_cuisines=preferences.favorite_cuisines
+        )
+        db.add(new_pref)
+
+    try:
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return preferences
 
 # =================================
 # 📊 MONITORING & METRICS

@@ -105,37 +105,39 @@ class ChatRequest(BaseModel):
 
 class UserPreferences(BaseModel):
     """User cooking preferences and settings"""
-    dietary_preferences: List[DietaryType] = Field(
+    # 1. เปลี่ยนจาก dietary_preferences เป็น dietary_types (ให้ตรงกับ DB และ Frontend)
+    dietary_types: List[str] = Field(
         default=[],
         description="User's dietary restrictions"
     )
+    
     allergies: List[str] = Field(
         default=[],
-        description="Food allergies",
-        examples=["nuts", "shellfish"]
+        description="Food allergies"
     )
-    cooking_skill: CookingSkill = Field(
-        default=CookingSkill.BEGINNER,
-        description="User's cooking skill level"
+
+    # 2. ฟิลด์ที่หน้าบ้านไม่ได้ส่งมา ให้ใส่ default ไว้เพื่อไม่ให้มันฟ้อง 422
+    cooking_skill: str = Field(
+        default="beginner"
     )
-    favorite_cuisines: List[CuisineType] = Field(
+
+    favorite_cuisines: List[str] = Field(
         default=[],
         description="User's favorite cuisine types"
     )
+
+    # 3. มั่นใจว่าชื่อฟิลด์นี้สะกดถูกตามที่ Frontend ส่ง (kitchen_equipment)
     kitchen_equipment: List[str] = Field(
         default=[],
-        description="Available kitchen equipment",
-        examples=["oven", "stovetop", "microwave", "blender"]
+        description="Available kitchen equipment"
     )
+
     spice_level: str = Field(
-        default="medium",
-        description="Preferred spice level",
-        examples=["mild"]
+        default="medium"
     )
+
     measurement_units: str = Field(
-        default="metric",
-        description="Preferred measurement system (metric/imperial)",
-        examples=["metric"]
+        default="metric"
     )
 
 # =================================

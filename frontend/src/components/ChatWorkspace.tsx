@@ -380,8 +380,18 @@ export default function ChatWorkspace({
 
     try {
       const response = imageDataUrl
-        ? await apiClient.sendMessageWithImage(messageText, imageDataUrl, imageType || 'image/jpeg')
-        : await apiClient.sendMessage(messageText)
+        ? await apiClient.sendMessageWithImage(
+            messageText, 
+            imageDataUrl, 
+            imageType || 'image/jpeg',
+            // ส่ง userId เพิ่มเข้าไป (ต้องแน่ใจว่า apiClient รองรับ)
+            userName || 'default_user' 
+          )
+        : await apiClient.sendMessage(
+            messageText, 
+            activeConversation.id, // ส่ง conversation_id ไปด้วยเพื่อให้ Backend เก็บ History ถูก
+            userName || 'default_user' 
+          );
 
       const aiMsg: ChatMessage = {
         id: `m_${(Date.now() + 1).toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
