@@ -1,30 +1,32 @@
 # =================================
-# 🚀 MINIMAL WORKING REQUIREMENTS
+# 🚀 CORE WEB FRAMEWORK
 # =================================
-# Core web framework - these definitely work
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
 
 # Basic utilities
-python-multipart==0.0.6
-python-dotenv==1.0.0
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
 
 # HTTP clients
-requests==2.31.0
-httpx==0.25.2
+requests>=2.31.0
+httpx>=0.25.2
 
-# Development/testing
-python-jose[cryptography]==3.3.0
+# Security
+python-jose[cryptography]>=3.3.0
 
-psycopg2-binary==2.9.9
+# Database
+psycopg2-binary>=2.9.9
 
 # =================================
-# 📄 PDF PROCESSING & VECTOR SEARCH (Added for PDF Engine)
+# 📄 PDF PROCESSING & VECTOR SEARCH
 # =================================
-langchain==0.1.5
-langchain-text-splitters==0.0.1
-pymupdf==1.23.8
-faiss-cpu==1.7.4
-langchain-google-genai==1.0.1
+# Remove strict versions here to let the resolver work
+langchain>=0.1.0
+langchain-community
+langchain-text-splitters
+langchain-google-genai
+pymupdf>=1.23.8
+faiss-cpu>=1.7.4
