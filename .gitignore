@@ -300,3 +300,4 @@ dist/
 !*.config.example.ts
 .agents/skills/culinary-crafts-expert-analysis/SKILL.md
 .env.docker
+docs/DATA-STORAGE-PROMPTS-GUARDRAILS.md
