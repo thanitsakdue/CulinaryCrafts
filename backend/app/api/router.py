@@ -223,6 +223,7 @@ async def chat_with_assistant(
         db.rollback()
         logger.error(f"Error: {str(e)}")
         return ChatResponse(
+            message="Error",
             response=f"ขออภัยครับ เชฟเกิดข้อผิดพลาด: {str(e)}",
             conversation_id="error",
             suggestions=[],
