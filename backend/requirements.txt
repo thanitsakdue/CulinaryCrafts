@@ -25,7 +25,7 @@ psycopg2-binary>=2.9.9
 # =================================
 # Remove strict versions here to let the resolver work
 langchain>=0.1.0
-langchain-community
+langchain-community>=0.1.0
 langchain-text-splitters
 langchain-google-genai
 pymupdf>=1.23.8
