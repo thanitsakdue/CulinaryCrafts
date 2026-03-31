@@ -6,7 +6,7 @@
 
 Culinary Crafts เป็น **Agentic AI Cooking Assistant** ที่ใช้ LangGraph State Machine สำหรับการจัดการ workflow แบบ interactive และ memory-enabled
 
-```
+````
 CulinaryCrafts/
 ├── 📱 frontend/                    # Next.js Web Application
 │   ├── src/
@@ -24,11 +24,11 @@ CulinaryCrafts/
 │   │   ├── 🔄 graphs/              # LangGraph Workflow Definitions
 │   │   ├── 📋 schema/              # Pydantic Data Models & Schemas
 │   │   ├── 🔌 services/            # External Service Integration
-│   │   │   ├── vertex_ai/         # Vertex AI Search (RAG)
-│   │   │   ├── firestore/         # Cloud Firestore (Memory Layer)
-│   │   │   ├── gemini/            # Gemini 1.5 Pro Integration
-│   │   │   ├── memory/            # Memory Management System
-│   │   │   └── line/              # LINE Messaging API
+│   │   │   ├── gemini/            # Google Gemini 1.5 Pro
+│   │   │   ├── recipe_engine/     # Recipe Search & Filtering
+│   │   │   ├── rag_service/       # RAG Implementation
+│   │   │   ├── auth/              # OAuth & JWT Handling
+│   │   │   └── memory/            # User Preference Storage
 │   │   ├── 🌐 api/                 # FastAPI Endpoints
 │   │   ├── 📊 models/              # Database Models
 │   │   ├── 🛡️ middleware/          # Security & Rate Limiting
@@ -54,14 +54,14 @@ CulinaryCrafts/
 - **Memory-Enabled Conversations**: จดจำ preferences และ dietary restrictions
 - **Multimodal Input Processing**: รองรับข้อความและรูปภาพ
 
-### 🔍 Grounded RAG System  
-- **Verified Recipe Sources**: ค้นหาจากแหล่งข้อมูลที่เชื่อถือได้
-- **Semantic Search**: ใช้ Vertex AI Search สำหรับการค้นหาแบบ semantic
-- **Source Attribution**: แสดงที่มาของสูตรอาหารทุกครั้ง
+### 🔍 Grounded RAG System
+- **Verified Recipe Sources**: ค้นหาจากสูตรอาหารที่ได้รับการตรวจสอบ
+- **Semantic Search**: วิเคราะห์ข้อความและรูปภาพ เพื่อการค้นหาที่แม่นยำ
+- **Source Attribution**: แสดงที่มาของแนวทางสูตรอาหารทุกครั้ง
 
 ### 🧪 Personalization Engine
-- **Long-term Memory**: จัดเก็บ user profile และ preferences ใน Firestore
-- **Short-term Context**: จำสถานะการสนทนาปัจจุบัน  
+- **Long-term Memory**: จัดเก็บ user profile และ preferences ใน PostgreSQL
+- **Short-term Context**: จำสถานะการสนทนาปัจจุบัน
 - **Adaptive Recommendations**: ปรับเมนูตาม dietary restrictions และความชอบ
 
 ## 🛡️ Security & Scalability
@@ -84,64 +84,53 @@ CulinaryCrafts/
 
 | Layer | Technology | Purpose |
 |-------|------------|---------|
-| **Frontend** | Next.js + TypeScript | Web UI & LINE LIFF |
-| **Backend** | FastAPI + Python | REST API & Business Logic |
+| **Frontend** | Next.js 14 + TypeScript + Tailwind | Web UI & Responsive Design |
+| **Backend** | FastAPI + Python 3.11+ | REST API & Business Logic |
 | **AI Orchestration** | LangGraph | Agentic State Machine |
-| **AI Model** | Gemini 1.5 Pro | Multimodal AI Processing |
-| **Knowledge Base** | Vertex AI Search | RAG Implementation |
-| **Memory Store** | Cloud Firestore | User Profiles & Sessions |
-| **Authentication** | JWT + LINE Login | Secure User Auth |
-| **Deployment** | GKE + Docker | Container Orchestration |
-| **Infrastructure** | Terraform | Infrastructure as Code |
-| **Monitoring** | Google Cloud Monitoring | Observability Stack |
+| **AI Model** | Google Gemini 1.5 Pro | Multimodal AI Processing |
+| **Database** | PostgreSQL 15 | User Data & Recipes |
+| **Cache** | Redis | Session & Query Caching |
+| **Authentication** | JWT + NextAuth.js | Secure User Auth with OAuth |
+| **Containerization** | Docker + Docker Compose | Development & Production |
+| **Infrastructure** | Azure/AWS | Cloud Deployment |
+| **Monitoring** | Prometheus & Grafana | Observability Stack |
 
 ## 📋 Getting Started
 
-### 🚀 **Quick Start (Choose One)**
+### Prerequisites
+- **Node.js** 18+ and **Python** 3.11+
+- **Docker** & **Docker Compose** (for containerized setup)
+- **Google Cloud API Key** for Gemini integration
+- **PostgreSQL** 15+ (or use Docker)
+- **Redis** (or use Docker)
 
-**🎯 Interactive Menu:**
-```batch
-.\scripts\menu.bat
-```
-> 📋 **NEW**: Interactive menu for all 21+ scripts!
-
-**🐳 Docker (Recommended - Everything in one command):**
-```batch
-.\scripts\docker-start.bat
-```
-> Starts frontend, backend, database, Redis, monitoring - everything! 
-> Visit http://localhost:3000 when ready.
-> 
-> ❌ **Build issues?** Try: `.\scripts\docker-fix.bat`
-
-**💻 Local Development (Your current working setup):**
-```batch
-.\scripts\ultra-start.bat
-```
-
-**🧪 Test Enhanced API Docs:**
-```batch
-.\scripts\test-api-docs.bat  # Opens http://localhost:8000/docs
-```
-> ✨ **NEW**: Comprehensive Swagger documentation with examples!
-
-**📚 Complete Scripts Guide:** See [SCRIPTS-GUIDE.md](SCRIPTS-GUIDE.md) for all 21+ scripts
-
-**📖 Complete Guide:** See [GITHUB-DOCKER-GUIDE.md](GITHUB-DOCKER-GUIDE.md) for GitHub setup & Docker instructions.
+### 📚 Documentation
+- **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step setup guide
+- **[SCRIPTS-GUIDE.md](SCRIPTS-GUIDE.md)** - All available automation scripts (20+)
+- **[docs/](docs/)** - Complete technical documentation
 
 ---
 
-### Prerequisites
-- Node.js 18+ and Python 3.11+
-- Google Cloud Project with enabled APIs
-- LINE Developer Account
-- Docker & kubectl
+## 🚀 Quick Start (Choose One)
 
-### Quick Setup
+### Option 1: 🐳 Docker (Recommended - One Command)
 
-### Quick Setup
+```batch
+.\scripts\docker-start.bat
+````
 
-#### 🪟 **Windows (Recommended - Fixed Version)**
+✅ Starts everything automatically:
+
+- Frontend (http://localhost:3000)
+- Backend API (http://localhost:8000)
+- PostgreSQL Database
+- Redis Cache
+- Monitoring (Prometheus & Grafana)
+
+---
+
+### Option 2: 💻 Local Development (Windows)
+
 ```powershell
 # Clone repository
 git clone <repository-url>
@@ -149,20 +138,25 @@ cd CulinaryCrafts
 
 # Setup environment variables
 copy .env.example .env
-# Edit .env with your API keys
+# Edit .env with your API keys (GEMINI_API_KEY, etc.)
 
-# 🚀 QUICK SETUP (Handles venv corruption issues)
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+# Setup with automatic venv creation
 .\scripts\quick-setup.ps1
 
-# Alternative: Original PowerShell Script
-.\scripts\dev-start.ps1
-
-# Alternative: Batch Script
-.\scripts\dev-start.bat
+# Or use simple batch script
+.\scripts\ultra-start.bat
 ```
 
-#### 🐧 **Linux/macOS**
+✅ Starts:
+
+- Backend API (http://localhost:8000)
+- Frontend (http://localhost:3000)
+- Supporting services (PostgreSQL, Redis if needed)
+
+---
+
+### Option 3: 🐧 Linux/macOS
+
 ```bash
 # Clone repository
 git clone <repository-url>
@@ -172,47 +166,22 @@ cd CulinaryCrafts
 cp .env.example .env
 # Edit .env with your API keys
 
-# Start development servers
+# Setup and start
 chmod +x scripts/dev-start.sh
 ./scripts/dev-start.sh
 ```
 
-### ⚠️ **Having Setup Issues?**
+---
 
-**🚨 URGENT: If you have Python 3.14 (pre-release) and see ensurepip errors:**
-1. **Quick Fix**: Run `.\scripts\ultra-simple.bat` (no virtual env method)
-2. **Alternative**: Run `.\scripts\simple-fix.bat` (manual pip method)  
-3. **See**: [PYTHON314-FIX.md](PYTHON314-FIX.md) for detailed Python 3.14 solutions
+### Option 4: 🛠️ Manual Setup
 
-**🚨 URGENT: If you see `'uvicorn' is not recognized` error:**
-1. **Quick Fix**: Run `.\scripts\complete-setup.bat` (fixes everything and starts servers)
-2. **See**: [UVICORN-FIX.md](UVICORN-FIX.md) for immediate solutions
-
-**🚨 If you see `localhost refused to connect` or `404 not found`:**
-
-1. **Quick Fix (Recommended)**: Use the fixed startup scripts:
-   ```batch
-   .\scripts\simple-start.bat
-   # or  
-   .\scripts\ultra-start.bat
-   ```
-
-2. **Check Quick Start Guide**: [QUICKSTART.md](QUICKSTART.md) - Step-by-step troubleshooting
-
-**Common Issues:**
-- ❌ `Python 3.14 ensurepip error` → ✅ Run `.\scripts\ultra-simple.bat`
-- ❌ `'uvicorn' is not recognized` → ✅ Run `.\scripts\fix-uvicorn.bat`
-- ❌ `npm start` → ✅ `npm run dev`
-
-### Manual Setup (Alternative)
-If scripts don't work, you can setup manually:
+If scripts don't work, setup manually:
 
 ```powershell
 # 1. Setup Python Backend
 cd backend
 python -m venv venv
 venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/macOS
 pip install --upgrade pip
 pip install -r requirements.txt
 
@@ -225,10 +194,53 @@ npm install
 cd backend
 venv\Scripts\activate && uvicorn app.main:app --reload
 
-# Terminal 2: Frontend  
+# Terminal 2: Frontend
 cd frontend
 npm run dev
 
-# Terminal 3: Supporting services
+# Terminal 3: Supporting services (PostgreSQL, Redis, etc.)
 docker-compose -f docker-compose.dev.yml up
 ```
+
+---
+
+## 🆘 Troubleshooting
+
+For detailed troubleshooting:
+
+- **Setup Issues?** → See [QUICKSTART.md](QUICKSTART.md)
+- **Python 3.14 errors?** → See [PYTHON314-FIX.md](PYTHON314-FIX.md)
+- **Uvicorn errors?** → See [UVICORN-FIX.md](UVICORN-FIX.md)
+- **Windows specific?** → See [docs/troubleshooting-windows.md](docs/troubleshooting-windows.md)
+
+---
+
+## 📖 Documentation
+
+| Document                                                   | Purpose                    |
+| ---------------------------------------------------------- | -------------------------- |
+| [QUICKSTART.md](QUICKSTART.md)                             | Step-by-step setup guide   |
+| [SCRIPTS-GUIDE.md](SCRIPTS-GUIDE.md)                       | Complete scripts reference |
+| [docs/SYSTEM-ARCHITECTURE.md](docs/SYSTEM-ARCHITECTURE.md) | System design & workflow   |
+| [docs/API-DOCUMENTATION.md](docs/API-DOCUMENTATION.md)     | API endpoints reference    |
+| [docs/USER-WORKFLOWS.md](docs/USER-WORKFLOWS.md)           | User interaction flows     |
+
+---
+
+## 🤝 Development Workflow
+
+1. **Create feature branch**: `git checkout -b feature/your-feature`
+2. **Make changes** and test locally
+3. **Commit changes**: `git commit -m "description"`
+4. **Push to GitHub**: `git push origin feature/your-feature`
+5. **Create Pull Request** for code review
+
+---
+
+## 📞 Support
+
+For questions or issues:
+
+- Check [QUICKSTART.md](QUICKSTART.md) first
+- Review [docs/](docs/) for technical details
+- Open an GitHub Issue with details
