@@ -4,11 +4,12 @@ Configuration management using Pydantic Settings
 """
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, field_validator
 from typing import List, Optional
 from functools import lru_cache
 import os
 from pathlib import Path
+import json
 
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
@@ -102,6 +103,36 @@ class Settings(BaseSettings):
         default=["127.0.0.1"],
         description="Trusted Proxy IPs"
     )
+
+    @field_validator("CORS_ORIGINS", "ALLOWED_HOSTS", "TRUSTED_PROXIES", mode="before")
+    @classmethod
+    def parse_list_env(cls, value):
+        """Accept JSON arrays, comma-separated strings, or plain strings for list settings."""
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return []
+
+            # JSON array format: ["https://a.com","https://b.com"]
+            if value.startswith("["):
+                try:
+                    parsed = json.loads(value)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except json.JSONDecodeError:
+                    # Fall back to comma-separated parsing below
+                    pass
+
+            # CSV / single-string formats:
+            # https://a.com,https://b.com
+            # https://a.com
+            return [item.strip() for item in value.split(",") if item.strip()]
+
+        return value
     
     def is_production(self) -> bool:
         """Check if running in production environment."""
