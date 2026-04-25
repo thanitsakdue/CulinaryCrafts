@@ -51,9 +51,10 @@ router = APIRouter(
 # =================================
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise ValueError("❌ ไม่พบ GEMINI_API_KEY ในไฟล์ .env")
-genai.configure(api_key=api_key)  # type: ignore
+if api_key:
+    genai.configure(api_key=api_key)  # type: ignore
+else:
+    logger.warning("⚠️ GEMINI_API_KEY not set; /chat endpoint will return configuration error")
 
 @router.get(
     "/",
@@ -172,6 +173,11 @@ async def chat_with_assistant(
     request: ChatRequest, 
     db: Session = Depends(get_db)
 ):
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="GEMINI_API_KEY is not configured on the server"
+        )
     user_query = request.message
     session_id = request.conversation_id if request.conversation_id else "test"
     
