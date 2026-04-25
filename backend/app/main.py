@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 import logging
 import os
 from typing import List
+from sqlalchemy.exc import SQLAlchemyError
 from app.api import router as api_router
 from app.middleware.security import SecurityMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -20,8 +21,17 @@ from .database import engine
 from app.models_db import Base, ChatLog, UserPreference
 
 logger = logging.getLogger(__name__)
-Base.metadata.create_all(bind=engine)
 settings = get_settings()
+
+def initialize_database() -> None:
+    """Initialize DB tables without crashing app startup on connection issues."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("✅ Database tables initialized")
+    except SQLAlchemyError as e:
+        logger.warning(f"⚠️ Database initialization skipped: {e}")
+    except Exception as e:
+        logger.warning(f"⚠️ Unexpected DB initialization error: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,6 +40,7 @@ async def lifespan(app: FastAPI):
     logger.info("🍳 Starting Culinary Crafts API...")
     
     try:
+        initialize_database()
         app.state.recipe_engine = recipe_engine 
 
         preload_recipe_engine = os.getenv("PRELOAD_RECIPE_ENGINE", "false").lower() == "true"
