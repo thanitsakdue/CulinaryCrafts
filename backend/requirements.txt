@@ -3,6 +3,7 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
+PyYAML>=6.0
 
 # --- Utils & Database ---
 python-multipart>=0.0.6
@@ -12,12 +13,13 @@ httpx>=0.25.2
 python-jose[cryptography]>=3.3.0
 psycopg2-binary>=2.9.9
 
-# --- AI & PDF (The Fix) ---
-# We add the specific google-generativeai package that was missing
-google-generativeai>=0.4.0
-langchain>=0.1.0
-langchain-google-genai>=1.0.0
-langchain-community
-langchain-text-splitters
+# --- AI & PDF ---
+# Pinned to exact compatible versions to prevent pip resolver backtracking
+google-generativeai==0.8.6
+langchain==1.2.15
+langchain-core==1.3.2
+langchain-google-genai==4.2.2
+langchain-community==0.4.1
+langchain-text-splitters==1.1.2
 pymupdf>=1.23.8
 faiss-cpu>=1.7.4
