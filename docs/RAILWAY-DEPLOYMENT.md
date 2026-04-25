@@ -203,6 +203,14 @@ Use this checklist in order:
 **Cause:** Heavy dependency install.
 **Fix:** Reduce dependency set, pin versions, clear cache, prefer buildpack flow.
 
+### Error: "Application failed to respond" on Railway URL
+**Cause:** App process crashed on startup or did not bind in time.
+**Fix checklist:**
+- Confirm backend uses Railway `$PORT` (Procfile/start command).
+- Ensure `DATABASE_URL` is set, or app has fallback DB config.
+- Avoid long startup tasks (PDF embedding/index load) during boot.
+- Check deploy logs for traceback and fix first exception line.
+
 ---
 
 ## 9) Production Checklist (Quick)
@@ -226,4 +234,3 @@ Use this checklist in order:
 3. Deploy frontend service with backend URL configured.
 4. Test login/chat.
 5. Add database plugin and validate persistence logs.
-
