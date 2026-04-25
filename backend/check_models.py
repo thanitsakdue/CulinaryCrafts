@@ -1,7 +1,11 @@
-import google.generativeai as genai
+import os
+from google import genai
 
-genai.configure(api_key="AIzaSyCL3OiyV7ACfk0SjGTjHurDdetaUp6vTkQ")
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise RuntimeError("Set GEMINI_API_KEY before running this script")
 
-for m in genai.list_models():
-    if "embedContent" in m.supported_generation_methods:
+client = genai.Client(api_key=api_key)
+for m in client.models.list():
+    if "generateContent" in getattr(m, "supported_actions", []):
         print(m.name)
