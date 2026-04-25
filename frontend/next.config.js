@@ -1,25 +1,20 @@
 /** @type {import('next').NextConfig} */
 const isWindows = process.platform === 'win32'
-const backendApiBase =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.BACKEND_API_URL ||
-  'http://127.0.0.1:8000/api/v1'
 
 // 1. จัดการ API URL ให้ยืดหยุ่นและปลอดภัย
 const getBackendApiBase = () => {
-  const url = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_API_URL;
-  
+  const url = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_API_URL
+
   // ถ้าอยู่ใน Production แล้วหา URL ไม่เจอ ให้แจ้งเตือนชัดเจนแทนการแอบใช้ localhost
   if (!url && process.env.NODE_ENV === 'production') {
-    console.warn("⚠️ Warning: NEXT_PUBLIC_API_URL is not defined. API rewrites might fail.");
-    // คืนค่าว่างหรือค่าที่คุณแก้ล่าสุดเพื่อเป็น Fallback ตัวสุดท้าย
-    return 'https://culinarycrafts-production-b4c2.up.railway.app/api/v1';
+    console.warn('Warning: NEXT_PUBLIC_API_URL is not defined. API rewrites might fail.')
+    return 'https://culinarycrafts-production-b4c2.up.railway.app/api/v1'
   }
-  
-  return url || 'http://127.0.0.1:8000/api/v1';
-};
 
-const backendApiBase = getBackendApiBase();
+  return url || 'http://127.0.0.1:8000/api/v1'
+}
+
+const backendApiBase = getBackendApiBase()
 
 const nextConfig = {
   reactStrictMode: true,
