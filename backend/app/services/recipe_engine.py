@@ -17,17 +17,22 @@ class PDFRecipeEngine:
         # ดึง API Key จาก Environment Variable
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
-            raise ValueError("❌ ไม่พบ GEMINI_API_KEY ใน Environment หรือไฟล์ .env")
-        self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/gemini-embedding-001",
-            api_key=SecretStr(api_key) if api_key else None
-        )
+            logger.warning("⚠️ GEMINI_API_KEY not set; recipe engine embeddings are disabled")
+            self.embeddings = None
+        else:
+            self.embeddings = GoogleGenerativeAIEmbeddings(
+                model="models/gemini-embedding-001",
+                api_key=SecretStr(api_key)
+            )
 
     def initialize(self):
             """โหลดไฟล์ PDF พร้อมระบบ Persistence (ไม่ต้องโหลดซ้ำถ้าเคยเซฟไว้แล้ว)"""
             import time
             import os
             from langchain_community.vectorstores import FAISS
+            if self.embeddings is None:
+                logger.warning("⚠️ Skip recipe engine initialization because embeddings are disabled")
+                return
 
             save_path = "faiss_index"  # ชื่อโฟลเดอร์ที่จะเก็บข้อมูล
             data_folder = os.path.join(os.getcwd(), "data")
