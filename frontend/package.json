@@ -9,7 +9,7 @@
     "prebuild": "node scripts/ensure-next-dist.js",
     "build": "next build",
     "prestart": "node -e \"console.log('Skipping ensure-next-dist in runtime start')\"",
-    "start": "next start",
+    "start": "node -e \"const fs=require('fs');process.exit(fs.existsSync('server.js') ? 0 : 1)\" && node server.js || next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",
