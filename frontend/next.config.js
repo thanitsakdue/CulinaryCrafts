@@ -5,42 +5,68 @@ const backendApiBase =
   process.env.BACKEND_API_URL ||
   'http://127.0.0.1:8000/api/v1'
 
+// 1. จัดการ API URL ให้ยืดหยุ่นและปลอดภัย
+const getBackendApiBase = () => {
+  const url = process.env.NEXT_PUBLIC_API_URL || process.env.BACKEND_API_URL;
+  
+  // ถ้าอยู่ใน Production แล้วหา URL ไม่เจอ ให้แจ้งเตือนชัดเจนแทนการแอบใช้ localhost
+  if (!url && process.env.NODE_ENV === 'production') {
+    console.warn("⚠️ Warning: NEXT_PUBLIC_API_URL is not defined. API rewrites might fail.");
+    // คืนค่าว่างหรือค่าที่คุณแก้ล่าสุดเพื่อเป็น Fallback ตัวสุดท้าย
+    return 'https://culinarycrafts-production-b4c2.up.railway.app/api/v1';
+  }
+  
+  return url || 'http://127.0.0.1:8000/api/v1';
+};
+
+const backendApiBase = getBackendApiBase();
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // IMPORTANT: Keep `distDir` inside the project. Next executes server bundles
-  // from `<distDir>/server/...`; if `distDir` is outside `frontend/`, Node's
-  // module resolution won't find `frontend/node_modules` (e.g. `react/jsx-runtime`).
+  
+  // โครงสร้างโฟลเดอร์สำหรับการรันบน Railway
   distDir: process.env.NEXT_DIST_DIR || '.next',
-  // For Docker builds (Linux). On Windows local builds, standalone may attempt
-  // symlinks into the output tree and fail without elevated permissions.
   output: isWindows ? undefined : 'standalone',
 
-  // API proxy to backend - only specific backend routes, NOT NextAuth
+  // ส่วนการส่งต่อ Request (Proxy)
   async rewrites() {
     return [
-      // Backend routes - explicitly list what goes to backend API base URL
-      // NextAuth routes (/api/auth/*) automatically stay on frontend (port 3000)
       {
+        // เมื่อ Frontend เรียก /api/v1/... ให้ส่งต่อไปที่ Backend URL
         source: '/api/v1/:path*',
         destination: `${backendApiBase}/:path*`,
       },
-    ]
+    ];
   },
 
-  // CORS configuration
+  // การตั้งค่าความปลอดภัย (Security Headers & CORS)
   async headers() {
     return [
       {
         source: '/api/:path*',
         headers: [
           { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Origin', value: '*' }, // ในอนาคตควรระบุ Domain จริงเพื่อความปลอดภัย
           { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
           { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version' },
         ],
       },
-    ]
+    ];
+  },
+  
+  // เพิ่มการตั้งค่าเพื่อรองรับรูปภาพ (ถ้ามี)
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.up.railway.app',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com', // เผื่อไว้สำหรับรูปจาก Google Cloud
+      },
+    ],
   },
 }
 
