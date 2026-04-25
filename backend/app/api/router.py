@@ -8,7 +8,7 @@ from fastapi.responses import PlainTextResponse
 from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
-import google.generativeai as genai
+from google import genai
 import os
 from dotenv import load_dotenv
 # Import Pydantic models
@@ -51,9 +51,22 @@ router = APIRouter(
 # =================================
 load_dotenv()
 api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    raise ValueError("❌ ไม่พบ GEMINI_API_KEY ในไฟล์ .env")
-genai.configure(api_key=api_key)  # type: ignore
+gemini_model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+gemini_client = None
+if api_key:
+    gemini_client = genai.Client(api_key=api_key)
+else:
+    logger.warning("⚠️ GEMINI_API_KEY not set; /chat endpoint will return configuration error")
+
+def generate_text(prompt: str) -> str:
+    if gemini_client is None:
+        raise RuntimeError("GEMINI_API_KEY is not configured on the server")
+
+    response = gemini_client.models.generate_content(
+        model=gemini_model,
+        contents=prompt,
+    )
+    return response.text or ""
 
 @router.get(
     "/",
@@ -125,23 +138,7 @@ async def api_health() -> HealthResponse:
 # =================================
 # 🤖 AI ASSISTANT ENDPOINTS
 # =================================
-model = genai.GenerativeModel('gemini-1.5-flash-latest') # type: ignore
-def get_available_model():
-    try:
-        for m in genai.list_models(): # type: ignore
-            if 'generateContent' in m.supported_generation_methods:
-                logger.info(f"✅ Found working model: {m.name}")
-                if 'gemini-1.5-flash' in m.name:
-                    return m.name
-        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods] # type: ignore
-        return models[0] if models else "gemini-pro"
-    except Exception as e:
-        logger.error(f"❌ Error listing models: {e}")
-        return "gemini-1.5-flash"
-
-working_model_name = get_available_model()
-logger.info(f"🚀 Using model: {working_model_name}")
-model = genai.GenerativeModel(working_model_name) # type: ignore
+logger.info(f"🚀 Using model: {gemini_model}")
 @router.post(
     "/chat",
     response_model=ChatResponse,
@@ -172,6 +169,11 @@ async def chat_with_assistant(
     request: ChatRequest, 
     db: Session = Depends(get_db)
 ):
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="GEMINI_API_KEY is not configured on the server"
+        )
     user_query = request.message
     session_id = request.conversation_id if request.conversation_id else "test"
     
@@ -191,7 +193,7 @@ async def chat_with_assistant(
 
         # 3. 🍳 ทำ RAG (สกัด Keyword และหา PDF)
         extract_prompt = build_keyword_extraction_prompt(user_query)
-        extracted_keywords = model.generate_content(extract_prompt).text.strip()
+        extracted_keywords = generate_text(extract_prompt).strip()
         logger.info(f"🔍 Extracted keywords: {extracted_keywords}")
         
         found_docs = recipe_engine.search(extracted_keywords, limit=2)
@@ -209,8 +211,7 @@ async def chat_with_assistant(
         logger.debug(f"📝 Final prompt built (length: {len(final_prompt)} chars)")
 
         # 5. ส่งให้ Gemini
-        response = model.generate_content(final_prompt)
-        ai_response = response.text
+        ai_response = generate_text(final_prompt)
 
         # 6. บันทึกลง DB (เหมือนเดิม)
         new_log = ChatLog(session_id=session_id, user_query=user_query, ai_response=ai_response)
