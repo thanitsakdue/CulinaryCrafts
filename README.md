@@ -145,6 +145,7 @@ Use /docs for the full OpenAPI schema when running in debug mode.
 - docs/architecture.md
 - docs/USER-WORKFLOWS.md
 - docs/troubleshooting-windows.md
+- docs/RAILWAY-DEPLOYMENT.md
 
 ## Development Workflow
 
