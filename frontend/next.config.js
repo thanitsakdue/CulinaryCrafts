@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const isWindows = process.platform === 'win32'
+const backendApiBase =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.BACKEND_API_URL ||
+  'http://127.0.0.1:8000/api/v1'
 
 // 1. จัดการ API URL ให้ยืดหยุ่นและปลอดภัย
 const getBackendApiBase = () => {

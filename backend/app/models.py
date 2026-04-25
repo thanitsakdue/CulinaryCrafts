@@ -105,6 +105,10 @@ class ChatRequest(BaseModel):
 
 class UserPreferences(BaseModel):
     """User cooking preferences and settings"""
+    class Config:
+        allow_population_by_field_name = True
+        extra = "ignore"
+
     # 1. เปลี่ยนจาก dietary_preferences เป็น dietary_types (ให้ตรงกับ DB และ Frontend)
     dietary_types: List[str] = Field(
         default=[],
@@ -139,6 +143,30 @@ class UserPreferences(BaseModel):
     measurement_units: str = Field(
         default="metric"
     )
+
+    ingredients_to_avoid: List[str] = Field(
+        default=[],
+        alias="ingredientsToAvoid",
+        description="Ingredients the user wants to avoid"
+    )
+
+    @validator("spice_level", pre=True)
+    def normalize_spice_level(cls, value):
+        """Accept both numeric and string spice levels from frontend payloads."""
+        if isinstance(value, int):
+            mapping = {
+                0: "mild",
+                1: "medium",
+                2: "hot",
+                3: "very_hot",
+            }
+            return mapping.get(value, "medium")
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized.isdigit():
+                return cls.normalize_spice_level(int(normalized))
+            return normalized or "medium"
+        return "medium"
 
 # =================================
 # 📥 RESPONSE MODELS  
