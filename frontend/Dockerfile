@@ -51,7 +51,7 @@ ENV HOSTNAME "0.0.0.0"
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:3000 || exit 1
+    CMD node -e "require('http').get('http://localhost:' + (process.env.PORT || 3000), (res) => process.exit(res.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"
 
 # Start the application
 CMD ["node", "server.js"]

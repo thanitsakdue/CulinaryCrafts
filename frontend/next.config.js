@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const isWindows = process.platform === 'win32'
+const backendApiBase =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.BACKEND_API_URL ||
+  'http://127.0.0.1:8000/api/v1'
 
 const nextConfig = {
   reactStrictMode: true,
@@ -15,27 +19,11 @@ const nextConfig = {
   // API proxy to backend - only specific backend routes, NOT NextAuth
   async rewrites() {
     return [
-      // Backend routes - explicitly list what goes to port 8000
+      // Backend routes - explicitly list what goes to backend API base URL
       // NextAuth routes (/api/auth/*) automatically stay on frontend (port 3000)
       {
-        source: '/api/recipes/:path*',
-        destination: 'http://127.0.0.1:8000/api/recipes/:path*',
-      },
-      {
-        source: '/api/chat/:path*',
-        destination: 'http://127.0.0.1:8000/api/chat/:path*',
-      },
-      {
-        source: '/api/chat-history/:path*',
-        destination: 'http://127.0.0.1:8000/api/chat-history/:path*',
-      },
-      {
-        source: '/api/users/:path*',
-        destination: 'http://127.0.0.1:8000/api/users/:path*',
-      },
-      {
-        source: '/api/health',
-        destination: 'http://127.0.0.1:8000/api/health',
+        source: '/api/v1/:path*',
+        destination: `${backendApiBase}/:path*`,
       },
     ]
   },
