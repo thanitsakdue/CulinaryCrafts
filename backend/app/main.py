@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 import logging
 import os
 from typing import List
+from sqlalchemy.exc import SQLAlchemyError
 from app.api import router as api_router
 from app.middleware.security import SecurityMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
@@ -20,8 +21,17 @@ from .database import engine
 from app.models_db import Base, ChatLog, UserPreference
 
 logger = logging.getLogger(__name__)
-Base.metadata.create_all(bind=engine)
 settings = get_settings()
+
+def initialize_database() -> None:
+    """Initialize DB tables without crashing app startup on connection issues."""
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("✅ Database tables initialized")
+    except SQLAlchemyError as e:
+        logger.warning(f"⚠️ Database initialization skipped: {e}")
+    except Exception as e:
+        logger.warning(f"⚠️ Unexpected DB initialization error: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,15 +40,17 @@ async def lifespan(app: FastAPI):
     logger.info("🍳 Starting Culinary Crafts API...")
     
     try:
-        # แก้ไขตรงนี้: ให้ Log บอกว่ากำลังโหลด PDF
-        logger.info("📦 Initializing Recipe Engine (Loading PDF Knowledge Base)...")
-        
-        # เรียกใช้ initialize() ที่เราเขียนไว้ใน recipe_engine.py
-        recipe_engine.initialize() 
-        
+        initialize_database()
         app.state.recipe_engine = recipe_engine 
-        
-        logger.info("✅ All services (including PDF Recipe Engine) initialized successfully")
+
+        preload_recipe_engine = os.getenv("PRELOAD_RECIPE_ENGINE", "false").lower() == "true"
+        if preload_recipe_engine:
+            logger.info("📦 PRELOAD_RECIPE_ENGINE=true, initializing recipe engine at startup...")
+            recipe_engine.initialize()
+            logger.info("✅ Recipe engine initialized at startup")
+        else:
+            logger.info("⏭️ Skipping recipe engine preload (set PRELOAD_RECIPE_ENGINE=true to enable)")
+            logger.info("✅ Core services initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize services: {e}")
         raise
