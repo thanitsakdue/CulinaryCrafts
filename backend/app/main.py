@@ -30,15 +30,16 @@ async def lifespan(app: FastAPI):
     logger.info("🍳 Starting Culinary Crafts API...")
     
     try:
-        # แก้ไขตรงนี้: ให้ Log บอกว่ากำลังโหลด PDF
-        logger.info("📦 Initializing Recipe Engine (Loading PDF Knowledge Base)...")
-        
-        # เรียกใช้ initialize() ที่เราเขียนไว้ใน recipe_engine.py
-        recipe_engine.initialize() 
-        
         app.state.recipe_engine = recipe_engine 
-        
-        logger.info("✅ All services (including PDF Recipe Engine) initialized successfully")
+
+        preload_recipe_engine = os.getenv("PRELOAD_RECIPE_ENGINE", "false").lower() == "true"
+        if preload_recipe_engine:
+            logger.info("📦 PRELOAD_RECIPE_ENGINE=true, initializing recipe engine at startup...")
+            recipe_engine.initialize()
+            logger.info("✅ Recipe engine initialized at startup")
+        else:
+            logger.info("⏭️ Skipping recipe engine preload (set PRELOAD_RECIPE_ENGINE=true to enable)")
+            logger.info("✅ Core services initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize services: {e}")
         raise
